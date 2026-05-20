@@ -1,0 +1,120 @@
+---
+doc_type: decision
+slug: jgui-jcli-decouple
+category: architecture
+status: active
+created: 2026-05-10
+tags: [j-gui, jcli, decouple, channel, data-model, storage]
+---
+
+# j-gui 不修改 jcli，通过自有存储 + API 边界映射解耦
+
+## 背景
+
+j-gui 当前直接依赖 jcli crate，Channel 管理直接操作 jcli 的 `AgentConfig.providers`。这导致：
+
+1. j-gui 的前端 `Channel` 类型必须适配 jcli 的 `ModelProvider` 结构，前端/后端数据模型不兼容
+2. j-gui 的开发周期受 jcli 数据结构变更影响
+3. jcli 由另一个仓库/团队维护，j-gui 不应在其代码中做改动
+
+## 决定
+
+**j-gui 不修改 jcli 源代码，但通过写入 jcli 数据目录（`~/.jdata/`）保持 CLI/GUI 数据同步。**
+
+具体约束：
+
+1. **j-gui 不修改 jcli 代码**——不扩展 `ModelProvider`、不添加字段、不改 jcli 源码文件
+2. **j-gui 写入 jcli 数据目录**——Channel/Provider、Alias、Skills/Hooks/MCP 启停状态等通过 jcli 现有的存储 API 写入 `~/.jdata/`，保证 CLI 用户看到相同状态
+3. **GUI 独有配置走自有存储**——窗口尺寸、主题偏好、UI 状态等纯 GUI 数据存 `~/.jgui/`
+4. **数据同源**：jcli 数据目录是 Channel/Alias/Skills/Hooks/MCP 的唯一真实来源，j-gui 读写均通过此路径
+5. **jcli crate 作为依赖方向不变**——j-gui 继续通过 Rust crate 依赖调用 jcli API，但仅调用公开接口
+
+## 为什么选这个方案
+
+- **解耦**：j-gui 前端 Channel 模型不再受 jcli 结构约束，可自由演进
+- **互不干扰**：jcli 升级不影响 j-gui 的 Channel 数据，j-gui 的修改不影响 jcli 用户
+- **单向依赖**：j-gui 依赖 jcli API，但 jcli 不感知 j-gui 的存在
+
+## 耦合现状（2026-05-10 扫描）
+
+- **22 个导入点**跨越 **10 个模块路径**，影响 **10/14 j-gui Rust 文件 (71%)**
+- **无抽象层**：j-gui 直接导入 jcli 内部实现（`j_cli::command::chat::agent::api::call_llm_stream_async`、`j_cli::command::chat::infra::hook::types::HookEvent` 等）
+- **最脆弱点**：`HookEvent` 13 变体全量枚举匹配 + `ModelProvider` 裸字段构造 × 2 处
+- **历史上的本地源码路径依赖无 semver**：旧口径下 `j-cli = { path = "../../jcli" }` 会让 jcli 任意改动立即触发 j-gui 编译错误；当前默认依赖口径已切到 crates.io 版本
+- **长期解决方案**：Phase E `kernel-trait-abstraction`（#30）——⭐ 提前到 #27 之前执行。先建 trait 抽象层，后续所有 feature 基于 trait 实现。每延迟一个 feature，解耦成本成倍增加。
+
+### 实施路径（#30）
+
+1. **定义 trait 族**（j-gui 侧）：`ChatKernel` / `ConfigKernel` / `GovernanceKernel` / `SessionKernel` / `SystemKernel`
+2. **写适配器**：`JcliAdapter` 实现全部 trait，内部包装现有 jcli 调用（不改 jcli 代码）
+3. **迁移调用点**：逐个替换 j-gui 模块中的直接 jcli 导入为 trait 方法调用
+4. **退出标准**：`grep -r "j_cli::" src-tauri/src/` 仅剩 `adapters/` 目录下的适配器文件
+
+## 考虑过的替代方案
+
+1. **扩展 jcli ModelProvider**（原 #27 design 方案）→ 否决：修改 jcli 代码、双向耦合、跨仓库协调成本高
+2. **j-gui 完全独立于 jcli**（通过 WS/HTTP 远程协议）→ 否决：当前阶段过度设计，首版用 crate 直接调用已足够
+
+## 影响
+
+- `#27 channel-model-unify` design 需重写：从"改 jcli"变为"j-gui 自建 Channel 存储 + 单向迁移 + 调用时映射"
+- `#28 governance-bidirectional-sync` 需调整：从"双向同步"变为"j-gui 单向导入 jcli 源 + j-gui 自有存储写操作"
+- j-gui `Channels` 模块不再调用 `j_cli::command::chat::storage::load_agent_config/save_agent_config`
+- 新增文件：`~/.jgui/channels.json`（j-gui 的 Channel 数据存储）
+- Chat/Agent Engine 需新增 `Channel → ModelProvider` 映射函数
+
+## jcli 升级应对
+
+trait 抽象层实现后，jcli 升级时 **仅修改 adapter 内部，j-gui 其余模块不变**。
+
+### 场景 1：jcli 小版本（API 签名不变）
+
+```
+jcli v1.0.0 → v1.1.0
+  更新 Cargo.toml → cargo check 通过 → 验证完成
+```
+
+零改动。
+
+### 场景 2：jcli API 签名变化
+
+```
+jcli 改动内部 API 签名
+  ↓
+adapter 内部委托调用编译报错
+  ↓
+修改 adapter 内部实现，适配新签名
+  ↓
+trait 签名保持稳定 → 所有调用方零改动
+```
+
+影响范围：**仅 adapter 文件**。
+
+### 场景 3：jcli 新增功能
+
+```
+方案 A：不涉及现有 trait → j-gui 无需改动
+        （仅 CLI 用户可用，GUI 后续按需加 UI）
+
+方案 B：需要 GUI 支持
+  1. 对应 trait 加方法（如 ChatKernel::generate_report），默认返回 Err(Unsupported)
+  2. adapter 实现该方法
+  3. 前端按需加 UI 入口
+  4. 不影响其他 trait 方法
+```
+
+### 场景 4：jcli 废弃功能
+
+```
+adapter 对应方法编译报错
+  ↓
+评估 trait 方法是否仍需保留
+  - 是 → adapter 改用替代实现
+  - 否 → trait 方法标 #[deprecated] → 搜索调用点 → 移除 UI → 下一版本删方法
+```
+
+### 约束
+
+- trait 签名变更必须有 deprecation 周期
+- adapter 是 jcli 变更的**唯一影响面**——此约束写入 CLAUDE.md
+- 新 trait 方法应提供默认实现（返回 `Err(KernelError::Unsupported(...))`），不强制 breaking change

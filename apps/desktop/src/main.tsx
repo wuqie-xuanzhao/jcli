@@ -1,0 +1,262 @@
+/**
+ * 渲染进程入口 — Tauri 原生实现
+ */
+
+import React, { useEffect, useMemo, useRef } from 'react'
+import ReactDOM from 'react-dom/client'
+import { useSetAtom, useAtomValue, useStore } from 'jotai'
+import App from './App'
+import { themeModeAtom, themeStyleAtom, systemIsDarkAtom, applyThemeToDOM, initializeTheme } from './atoms/theme'
+import {
+  agentChannelIdAtom, agentModelIdAtom, agentChannelIdsAtom,
+  agentBackendModeAtom,
+  agentWorkspacesAtom, currentAgentWorkspaceIdAtom, currentAgentSessionIdAtom,
+  workspaceCapabilitiesVersionAtom, workspaceFilesVersionAtom,
+  agentThinkingAtom, agentEffortAtom, agentMaxBudgetUsdAtom, agentMaxTurnsAtom,
+  agentSettingsReadyAtom, dockBadgeCountAtom, unviewedCompletedSessionIdsAtom,
+} from './atoms/agent-atoms'
+import { notificationsEnabledAtom, notificationSoundEnabledAtom, notificationSoundsAtom, initializeNotifications } from './atoms/notifications'
+import { stickyUserMessageEnabledAtom, initializeUiPreferences } from './atoms/ui-preferences'
+import { useGlobalAgentListeners } from './hooks/useGlobalAgentListeners'
+import { useGlobalChatListeners } from './hooks/useGlobalChatListeners'
+import { useSyncChatWorkspaceId } from './hooks/useSyncChatWorkspaceId'
+import { tabsAtom, activeTabIdAtom, normalizeTabTitle } from './atoms/tab-atoms'
+import { currentConversationIdAtom, channelsAtom, channelsLoadedAtom, selectedModelAtom, currentChatWorkspaceIdAtom } from './atoms/chat-atoms'
+import { appModeAtom } from './atoms/app-mode'
+import { Toaster } from './components/ui/sonner'
+import { diffCapabilities } from '@jgui/shared'
+import type { AgentSessionMeta, AgentWorkspace, Channel, ConversationMeta, WorkspaceCapabilities } from '@jgui/shared'
+import { showCapabilityChangeToasts } from './lib/capabilities-toast'
+import { GlobalShortcuts } from './components/shortcuts/GlobalShortcuts'
+import { TabSwitcher } from './components/tabs/TabSwitcher'
+import { isDraftLikeAgentSession, isDraftLikeConversation } from './lib/session-meta'
+import './styles/globals.css'
+import 'katex/dist/katex.min.css'
+import * as ipc from '@/lib/ipc'
+
+// ============================================================
+// 初始化用组件
+// ============================================================
+
+function ThemeInitializer(): null {
+  const setThemeMode = useSetAtom(themeModeAtom)
+  const setThemeStyle = useSetAtom(themeStyleAtom)
+  const setSystemIsDark = useSetAtom(systemIsDarkAtom)
+  const themeMode = useAtomValue(themeModeAtom)
+  const themeStyle = useAtomValue(themeStyleAtom)
+  const systemIsDark = useAtomValue(systemIsDarkAtom)
+
+  useEffect(() => {
+    let isMounted = true
+    let cleanup: (() => void) | undefined
+    initializeTheme(setThemeMode, setSystemIsDark, setThemeStyle).then((fn) => {
+      if (isMounted) cleanup = fn
+      else fn()
+    })
+    return () => { isMounted = false; cleanup?.() }
+  }, [setThemeMode, setSystemIsDark, setThemeStyle])
+
+  const themeSignature = useMemo(() => {
+    if (themeMode === 'special') return `special:${themeStyle}`
+    if (themeMode === 'system') return `system:${systemIsDark ? 'dark' : 'light'}`
+    return themeMode
+  }, [themeMode, themeStyle, systemIsDark])
+
+  useEffect(() => { applyThemeToDOM(themeMode, themeStyle, systemIsDark) }, [themeMode, themeStyle, systemIsDark, themeSignature])
+  return null
+}
+
+function AgentSettingsInitializer(): null {
+  const setAgentChannelId = useSetAtom(agentChannelIdAtom)
+  const setAgentModelId = useSetAtom(agentModelIdAtom)
+  const setAgentBackendMode = useSetAtom(agentBackendModeAtom)
+  const setAgentChannelIds = useSetAtom(agentChannelIdsAtom)
+  const setAgentWorkspaces = useSetAtom(agentWorkspacesAtom)
+  const setCurrentWorkspaceId = useSetAtom(currentAgentWorkspaceIdAtom)
+  const bumpCapabilities = useSetAtom(workspaceCapabilitiesVersionAtom)
+  const bumpFiles = useSetAtom(workspaceFilesVersionAtom)
+  const setThinking = useSetAtom(agentThinkingAtom)
+  const setEffort = useSetAtom(agentEffortAtom)
+  const setMaxBudget = useSetAtom(agentMaxBudgetUsdAtom)
+  const setMaxTurns = useSetAtom(agentMaxTurnsAtom)
+  const setAgentSettingsReady = useSetAtom(agentSettingsReadyAtom)
+  const setChannels = useSetAtom(channelsAtom)
+  const setChannelsLoaded = useSetAtom(channelsLoadedAtom)
+  const setCurrentChatWorkspaceId = useSetAtom(currentChatWorkspaceIdAtom)
+  const store = useStore()
+  const currentWorkspaceId = useAtomValue(currentAgentWorkspaceIdAtom)
+  const workspaces = useAtomValue(agentWorkspacesAtom)
+  const prevCapabilitiesRef = useRef<WorkspaceCapabilities | null>(null)
+  const suppressToastRef = useRef(true)
+  useSyncChatWorkspaceId()
+
+  useEffect(() => {
+    Promise.all([ipc.listChannels(), ipc.getSettings()]).then(([channels, settings]) => {
+      setChannels(channels)
+      setChannelsLoaded(true)
+      const channelIds = new Set(channels.map((c: Channel) => c.id))
+      const chatModel = store.get(selectedModelAtom)
+      if (chatModel && !channelIds.has(chatModel.channelId)) store.set(selectedModelAtom, null)
+      if (settings.agentChannelId && channelIds.has(settings.agentChannelId)) setAgentChannelId(settings.agentChannelId)
+      if (settings.agentModelId) setAgentModelId(settings.agentModelId)
+      if (settings.agentBackendMode === 'claude-sdk' || settings.agentBackendMode === 'jagent') {
+        setAgentBackendMode(settings.agentBackendMode)
+      }
+      if (settings.agentChannelIds?.length) setAgentChannelIds(settings.agentChannelIds.filter((id: string) => channelIds.has(id)))
+      if (settings.agentThinking) setThinking(settings.agentThinking)
+      if (settings.agentEffort) setEffort(settings.agentEffort)
+      if (settings.agentMaxBudgetUsd != null) setMaxBudget(settings.agentMaxBudgetUsd)
+      if (settings.agentMaxTurns != null) setMaxTurns(settings.agentMaxTurns)
+      ipc.listAgentWorkspaces().then((ws: AgentWorkspace[]) => {
+        setAgentWorkspaces(ws)
+        const restoredWorkspaceId = store.get(currentAgentWorkspaceIdAtom)
+        if (restoredWorkspaceId && ws.some((w: AgentWorkspace) => w.id === restoredWorkspaceId)) {
+          setCurrentWorkspaceId(restoredWorkspaceId)
+        } else if (settings.agentWorkspaceId && ws.some((w: AgentWorkspace) => w.id === settings.agentWorkspaceId)) {
+          setCurrentWorkspaceId(settings.agentWorkspaceId)
+        } else if (ws.length > 0) {
+          setCurrentWorkspaceId(ws[0]!.id)
+        }
+        if (settings.chatWorkspaceId && ws.some((w: AgentWorkspace) => w.id === settings.chatWorkspaceId)) {
+          setCurrentChatWorkspaceId(settings.chatWorkspaceId)
+        } else if (ws.length > 0) {
+          setCurrentChatWorkspaceId(ws[0]!.id)
+        }
+        setAgentSettingsReady(true)
+      }).catch(() => setAgentSettingsReady(true))
+    }).catch(() => setAgentSettingsReady(true))
+  }, [setAgentBackendMode, setAgentChannelId, setAgentChannelIds, setAgentModelId, setAgentSettingsReady, setAgentWorkspaces, setChannels, setChannelsLoaded, setCurrentChatWorkspaceId, setCurrentWorkspaceId, setEffort, setMaxBudget, setMaxTurns, setThinking, store])
+
+  useEffect(() => {
+    suppressToastRef.current = true
+    prevCapabilitiesRef.current = null
+    if (!currentWorkspaceId) return
+    const ws = workspaces.find((w: AgentWorkspace) => w.id === currentWorkspaceId)
+    if (!ws) return
+    ipc.getWorkspaceCapabilities(ws.slug).then((caps: WorkspaceCapabilities) => {
+      prevCapabilitiesRef.current = caps
+      suppressToastRef.current = false
+    }).catch(console.error)
+  }, [currentWorkspaceId, workspaces])
+
+  useEffect(() => {
+    const u1 = ipc.onCapabilitiesChanged(() => {
+      const ws = workspaces.find((w: AgentWorkspace) => w.id === currentWorkspaceId)
+      if (ws) ipc.getWorkspaceCapabilities(ws.slug).then((newCaps: WorkspaceCapabilities) => {
+        const prev = prevCapabilitiesRef.current
+        if (prev && !suppressToastRef.current) showCapabilityChangeToasts(diffCapabilities(prev, newCaps))
+        prevCapabilitiesRef.current = newCaps
+        suppressToastRef.current = false
+      }).catch(console.error)
+      bumpCapabilities((v) => v + 1)
+    })
+    const u2 = ipc.onWorkspaceFilesChanged(() => bumpFiles((v) => v + 1))
+    return () => { u1(); u2() }
+  }, [bumpCapabilities, bumpFiles, currentWorkspaceId, workspaces])
+
+  return null
+}
+
+function NotificationsInitializer(): null {
+  const setEnabled = useSetAtom(notificationsEnabledAtom)
+  const setSoundEnabled = useSetAtom(notificationSoundEnabledAtom)
+  const setSounds = useSetAtom(notificationSoundsAtom)
+  useEffect(() => { initializeNotifications(setEnabled, setSoundEnabled, setSounds) }, [setEnabled, setSoundEnabled, setSounds])
+  return null
+}
+
+function DockBadgeInitializer(): null {
+  const count = useAtomValue(dockBadgeCountAtom)
+  const notificationsEnabled = useAtomValue(notificationsEnabledAtom)
+  const currentSessionId = useAtomValue(currentAgentSessionIdAtom)
+  const setUnviewedCompleted = useSetAtom(unviewedCompletedSessionIdsAtom)
+  const badgeCount = notificationsEnabled ? count : 0
+  useEffect(() => { ipc.setDockBadgeCount(badgeCount).catch(console.error) }, [badgeCount])
+  useEffect(() => {
+    const clear = () => {
+      if (!document.hasFocus() || !currentSessionId) return
+      setUnviewedCompleted((prev: Set<string>) => { if (!prev.has(currentSessionId)) return prev; const n = new Set(prev); n.delete(currentSessionId); return n })
+    }
+    clear()
+    window.addEventListener('focus', clear)
+    document.addEventListener('visibilitychange', clear)
+    return () => { window.removeEventListener('focus', clear); document.removeEventListener('visibilitychange', clear) }
+  }, [currentSessionId, setUnviewedCompleted])
+  return null
+}
+
+function UiPreferencesInitializer(): null {
+  const setSticky = useSetAtom(stickyUserMessageEnabledAtom)
+  useEffect(() => { initializeUiPreferences(setSticky) }, [setSticky])
+  return null
+}
+
+function ChatListenersInitializer(): null { useGlobalChatListeners(); return null }
+function AgentListenersInitializer(): null { useGlobalAgentListeners(); return null }
+
+function TabStatePersistenceInitializer(): null {
+  const store = useStore()
+  const restoredRef = useRef(false)
+  useEffect(() => {
+    Promise.all([ipc.getSettings(), ipc.listConversations(), ipc.listAgentSessions()]).then(([settings, conversations, agentSessions]) => {
+      const tabState = settings.tabState
+      if (!tabState?.tabs?.length) { restoredRef.current = true; return }
+      const validChatIds = new Set(conversations.filter((conversation: ConversationMeta) => !isDraftLikeConversation(conversation)).map((conversation: ConversationMeta) => conversation.id))
+      const validAgentIds = new Set(agentSessions.filter((session: AgentSessionMeta) => !isDraftLikeAgentSession(session)).map((session: AgentSessionMeta) => session.id))
+      const validTabs = tabState.tabs
+        .filter((tab: { id: string; type: 'chat' | 'agent'; sessionId: string; title?: string }) =>
+          tab?.sessionId
+          && ((tab.type === 'chat' && validChatIds.has(tab.sessionId)) || (tab.type === 'agent' && validAgentIds.has(tab.sessionId))),
+        )
+        .map((tab: { id: string; type: 'chat' | 'agent'; sessionId: string; title?: string }) => ({
+          ...tab,
+          title: normalizeTabTitle(tab.type, tab.title),
+        }))
+      if (!validTabs.length) { restoredRef.current = true; return }
+      const activeTabId = tabState.activeTabId && validTabs.some((t: { id: string }) => t.id === tabState.activeTabId) ? tabState.activeTabId : validTabs[0]?.id ?? null
+      store.set(tabsAtom, validTabs)
+      store.set(activeTabIdAtom, activeTabId)
+      const activeTab = validTabs.find((t: { id: string; type: 'chat' | 'agent'; sessionId: string }) => t.id === activeTabId)
+      if (activeTab) {
+        store.set(appModeAtom, activeTab.type)
+        store.set(activeTab.type === 'chat' ? currentConversationIdAtom : currentAgentSessionIdAtom, activeTab.sessionId)
+        if (activeTab.type === 'agent') {
+          const activeSession = agentSessions.find((session: AgentSessionMeta) => session.id === activeTab.sessionId)
+          store.set(currentAgentWorkspaceIdAtom, activeSession?.workspaceId ?? null)
+        }
+      }
+    }).catch(console.error).finally(() => { restoredRef.current = true })
+  }, [store])
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null
+    const save = () => { ipc.updateSettings({ tabState: { tabs: store.get(tabsAtom), activeTabId: store.get(activeTabIdAtom) } }).catch(console.error) }
+    const debounced = () => { if (!restoredRef.current) return; if (timer) clearTimeout(timer); timer = setTimeout(save, 500) }
+    const u1 = store.sub(tabsAtom, debounced)
+    const u2 = store.sub(activeTabIdAtom, debounced)
+    const beforeUnload = () => { if (timer) clearTimeout(timer); save() }
+    window.addEventListener('beforeunload', beforeUnload)
+    return () => { u1(); u2(); if (timer) clearTimeout(timer); window.removeEventListener('beforeunload', beforeUnload) }
+  }, [store])
+  return null
+}
+
+// ============================================================
+// 应用渲染
+// ============================================================
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <ThemeInitializer />
+    <AgentSettingsInitializer />
+    <NotificationsInitializer />
+    <DockBadgeInitializer />
+    <UiPreferencesInitializer />
+    <ChatListenersInitializer />
+    <AgentListenersInitializer />
+    <TabStatePersistenceInitializer />
+    <GlobalShortcuts />
+    <TabSwitcher />
+    <App />
+    <Toaster position="top-right" />
+  </React.StrictMode>
+)

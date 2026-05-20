@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+用法:
+  bash scripts/check_commit_message.sh --message-file <path>
+  bash scripts/check_commit_message.sh --message "<title>"
+  bash scripts/check_commit_message.sh --ref <git-ref>
+
+规则:
+  1. 遵循 Conventional Commits: <type>(<scope>): <description>
+  2. type 使用英文小写关键字
+  3. scope 和 description 必须包含中文
+EOF
+}
+
+MESSAGE=""
+RANGE=""
+
+validate_message() {
+    local message="$1"
+
+    if [[ ! "$message" =~ ^(feat|fix|refactor|docs|style|test|build|ci|chore|perf|revert)\(([^()]+)\):[[:space:]](.+)$ ]]; then
+        cat >&2 <<EOF
+提交文案不符合格式:
+  $message
+
+期望格式:
+  <type>(<scope>): <description>
+
+示例:
+  fix(桌面壳层): 收口窗口控件宿主并稳定全局快捷键链路
+EOF
+        return 1
+    fi
+
+    local scope="${BASH_REMATCH[2]}"
+    local description="${BASH_REMATCH[3]}"
+
+    contains_non_ascii() {
+        LC_ALL=C grep -q '[^ -~]' <<<"$1"
+    }
+
+    if ! contains_non_ascii "$scope"; then
+        echo "提交 scope 需要包含中文，当前为: $scope" >&2
+        return 1
+    fi
+
+    if ! contains_non_ascii "$description"; then
+        echo "提交 description 需要包含中文，当前为: $description" >&2
+        return 1
+    fi
+
+    echo "commit message 校验通过: $message"
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --message-file)
+            MESSAGE="$(head -n 1 "$2" | tr -d '\r')"
+            shift 2
+            ;;
+        --message)
+            MESSAGE="$2"
+            shift 2
+            ;;
+        --ref)
+            MESSAGE="$(git log -1 --format=%s "$2" | tr -d '\r')"
+            shift 2
+            ;;
+        --range)
+            RANGE="$2"
+            shift 2
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "未知参数: $1" >&2
+            usage >&2
+            exit 2
+            ;;
+    esac
+done
+
+if [[ -n "$RANGE" ]]; then
+    while IFS= read -r message; do
+        [[ -z "$message" ]] && continue
+        validate_message "$message"
+    done < <(git log --format=%s "$RANGE")
+    exit 0
+fi
+
+if [[ -z "$MESSAGE" ]]; then
+    echo "缺少提交信息输入。" >&2
+    usage >&2
+    exit 2
+fi
+
+validate_message "$MESSAGE"

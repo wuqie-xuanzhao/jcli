@@ -1,0 +1,36 @@
+[package]
+name = "j-gui"
+version = "0.1.0"
+description = "j-cli Tauri desktop GUI"
+authors = ["wuqie-xuanzhao"]
+edition = "2021"
+
+[lib]
+name = "j_gui_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-opener = "2"
+tauri-plugin-shell = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-window-state = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+uuid = { version = "1", features = ["v4"] }
+reqwest = { version = "0.12", features = ["json"] }
+base64 = "0.22"
+thiserror = "2"
+async-trait = "0.1"
+tokio-util = { version = "0.7", features = [] }
+futures-util = "0.3"
+j-cli = "12.10.44"
+
+[dev-dependencies]
+mockall = "0.13"
