@@ -26,8 +26,6 @@ use rust_embed::RustEmbed;
 /// 所有 assets 目录下的文件都会被嵌入到二进制中
 #[derive(Debug, RustEmbed)]
 #[folder = "assets/"]
-#[exclude = "remote/node_modules/*"]
-#[exclude = "remote/dist/*"]
 pub struct Assets;
 
 // ========== 重导出子模块公开 API ==========

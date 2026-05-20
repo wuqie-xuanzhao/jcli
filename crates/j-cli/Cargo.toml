@@ -1,0 +1,96 @@
+[package]
+name = "j-cli"
+version = "12.10.69"
+edition = "2024"
+rust-version = "1.93.1"
+authors = ["lingojack@qq.com"]
+description = "A fast CLI tool for alias management, daily reports, and productivity"
+license = "MIT"
+repository = "https://github.com/LingoJack/jcli"
+homepage = "https://github.com/LingoJack/jcli"
+readme = "README.md"
+keywords = ["cli", "alias", "productivity", "launcher"]
+categories = ["command-line-utilities"]
+
+[lib]
+name = "j_cli"
+path = "src/lib.rs"
+
+[[bin]]
+name = "j"
+path = "src/main.rs"
+
+[dependencies]
+j-agent = { version = "12.10.69", path = "../j-agent" }
+clap = { version = "4", features = ["derive"] }
+rust-embed = { version = "8", features = ["include-exclude"] }
+rustyline = "17.0.2"
+serde = { version = "1", features = ["derive"] }
+schemars = "0.8"
+serde_yaml = "0.9"
+serde_json = "1"
+thiserror = "2"
+chrono = "0.4"
+colored = "3"
+dirs = "6"
+url = "2"
+indicatif = "0.18.3"
+termimad = "0.34.1"
+ratatui = "0.29.0"
+crossterm = "0.28.0"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+futures = "0.3"
+pulldown-cmark = "0.13.0"
+unicode-width = "0.2"
+reqwest = { version = "0.13", default-features = false, features = ["blocking", "rustls", "gzip", "brotli", "deflate", "json", "stream"] }
+urlencoding = "2.1"
+html2text = "0.16"
+scraper = "0.26"
+html2md = "0.2"
+ratatui-image = "8.0.2"
+image = "0.25"
+glob = "0.3"
+# 浏览器自动化（可选，需 --features browser_cdp 启用）
+chromiumoxide = { version = "0.7", default-features = false, features = ["tokio-runtime"], optional = true }
+base64 = "0.22"
+ignore = "0.4.25"
+notify = "7"
+regex = "1.12.3"
+tokio-tungstenite = "0.29"
+qrcode = "0.14"
+rand = "0.8"
+uuid = { version = "1", features = ["v4"] }
+p256 = { version = "0.13", features = ["ecdh"] }
+aes-gcm = "0.10"
+hkdf = "0.13"
+sha2 = "0.11"
+ctrlc = "3.5"
+supports-color = "3"
+ansi_colours = "1.2"
+arboard = { version = "3.6.1", default-features = false }
+portable-pty = "0.8"
+
+[target.'cfg(unix)'.dependencies.self_update]
+version = "0.42"
+default-features = false
+features = ["archive-tar", "compression-flate2", "rustls"]
+
+[target.'cfg(windows)'.dependencies.self_update]
+version = "0.42"
+default-features = false
+features = ["archive-zip", "compression-zip-deflate", "rustls"]
+
+# Unix-only dependencies
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.31", features = ["process", "signal"] }
+libc = "0.2"
+
+# macOS-only dependencies
+[target.'cfg(target_os = "macos")'.dependencies]
+core-graphics = "0.25"
+core-foundation = "0.10"
+
+[features]
+default = []
+browser_cdp = ["dep:chromiumoxide"]
