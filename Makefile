@@ -6,8 +6,8 @@ SHELL := /bin/bash
 INSTALL_DIR := /usr/local/bin
 REPO := LingoJack/jcli
 TARGET_DIR := target/release
-VERSION := $(shell grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
-J_AGENT_VERSION := $(shell grep '^version' j-agent/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+VERSION := $(shell grep '^version' crates/j-cli/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
+J_AGENT_VERSION := $(shell grep '^version' crates/j-agent/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')
 GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 
 # ============================================
@@ -92,7 +92,7 @@ push: current_dir fmt build-web ## AI 生成 commit message 并推送
 	awk -v stat_file="$$stat_file" -v diff_file="$$diff_file" '\
 		/\{\{diff_stat\}\}/ { while ((getline l < stat_file) > 0) print l; close(stat_file); next } \
 		/\{\{diff\}\}/      { while ((getline l < diff_file) > 0) print l; close(diff_file); next } \
-		{ print }' prompts/commit-message.md > "$$prompt_file"; \
+		{ print }' crates/j-cli/prompts/commit-message.md > "$$prompt_file"; \
 	ai_out=$$(mktemp); \
 	j ai --bypass --no-render -- "$$(cat "$$prompt_file")" > "$$ai_out" 2>/dev/null; \
 	echo ""; \
@@ -144,24 +144,24 @@ status: current_dir ## 查看 Git 状态
 # ============================================
 build-remote: ## 构建 Remote 前端
 	@echo "🌐 构建 Remote 前端..."
-	@cd assets/remote && npm install --silent && npm run build && cp dist/remote.html ..
+	@cd apps/remote && npm install --silent && npm run build && cp dist/remote.html ../../crates/j-cli/assets/
 	@echo "☑️ Remote 前端构建完成"
 
-build-web: ## 构建 Web 前端
-	@echo "🌐 构建 Web 前端..."
-	@cd web && npm install --silent && npm run build
-	@echo "☑️ Web 前端构建完成"
+build-web: ## 构建 Web 文档站
+	@echo "🌐 构建 Web 文档站..."
+	@cd apps/docs && npm install --silent && npm run build
+	@echo "☑️ Web 文档站构建完成"
 
 build-indicator: ## 构建 j-indicator (macOS 点击光圈指示器)
 	@echo "🔴 构建 j-indicator..."
 	@mkdir -p $(TARGET_DIR)
-	@swiftc helpers/indicator.swift -o $(TARGET_DIR)/j-indicator -O
+	@swiftc crates/j-cli/helpers/indicator.swift -o $(TARGET_DIR)/j-indicator -O
 	@echo "☑️ j-indicator 构建完成: $(TARGET_DIR)/j-indicator"
 
 build-ax: ## 构建 j-ax (macOS Accessibility API helper)
 	@echo "♿ 构建 j-ax..."
 	@mkdir -p $(TARGET_DIR)
-	@swiftc helpers/ax.swift -o $(TARGET_DIR)/j-ax -O -framework Cocoa -framework ApplicationServices
+	@swiftc crates/j-cli/helpers/ax.swift -o $(TARGET_DIR)/j-ax -O -framework Cocoa -framework ApplicationServices
 	@echo "☑️ j-ax 构建完成: $(TARGET_DIR)/j-ax"
 
 # ============================================
@@ -215,25 +215,25 @@ uninstall: ## 卸载
 # ============================================
 bump-version: ## 递增版本号（最后一位 patch，同步 j-agent 和安装脚本）
 	@echo "📌 递增版本号..."
-	@cli_ver=$$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/'); \
+	@cli_ver=$$(grep '^version' crates/j-cli/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/'); \
 	major=$$(echo $$cli_ver | cut -d. -f1); \
 	minor=$$(echo $$cli_ver | cut -d. -f2); \
 	patch=$$(echo $$cli_ver | cut -d. -f3); \
 	new_patch=$$((patch + 1)); \
 	new_version="$$major.$$minor.$$new_patch"; \
-	agent_ver=$$(grep '^version' j-agent/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/'); \
+	agent_ver=$$(grep '^version' crates/j-agent/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/'); \
 	echo "  j-cli: $$cli_ver → $$new_version"; \
 	echo "  j-agent: $$agent_ver → $$new_version"; \
 	if [[ "$$OSTYPE" == "darwin"* ]]; then \
-		sed -i '' "s/^version = \"$$cli_ver\"/version = \"$$new_version\"/" Cargo.toml; \
-		sed -i '' "s/^version = \"$$agent_ver\"/version = \"$$new_version\"/" j-agent/Cargo.toml; \
-		sed -i '' "s/\(j-agent.*version = \"\)[^\"]*\"/\1$$new_version\"/" Cargo.toml; \
+		sed -i '' "s/^version = \"$$cli_ver\"/version = \"$$new_version\"/" crates/j-cli/Cargo.toml; \
+		sed -i '' "s/^version = \"$$agent_ver\"/version = \"$$new_version\"/" crates/j-agent/Cargo.toml; \
+		sed -i '' "s/\(j-agent.*version = \"\)[^\"]*\"/\1$$new_version\"/" crates/j-cli/Cargo.toml; \
 		sed -i '' "s/DEFAULT_VERSION=\"v[^\"]*\"/DEFAULT_VERSION=\"v$$new_version\"/" install.sh; \
 		sed -i '' 's/\$$DefaultVersion = "v[^"]*"/\$$DefaultVersion = "v'"$$new_version"'"/' install.ps1; \
 	else \
-		sed -i "s/^version = \"$$cli_ver\"/version = \"$$new_version\"/" Cargo.toml; \
-		sed -i "s/^version = \"$$agent_ver\"/version = \"$$new_version\"/" j-agent/Cargo.toml; \
-		sed -i "s/\(j-agent.*version = \"\)[^\"]*\"/\1$$new_version\"/" Cargo.toml; \
+		sed -i "s/^version = \"$$cli_ver\"/version = \"$$new_version\"/" crates/j-cli/Cargo.toml; \
+		sed -i "s/^version = \"$$agent_ver\"/version = \"$$new_version\"/" crates/j-agent/Cargo.toml; \
+		sed -i "s/\(j-agent.*version = \"\)[^\"]*\"/\1$$new_version\"/" crates/j-cli/Cargo.toml; \
 		sed -i "s/DEFAULT_VERSION=\"v[^\"]*\"/DEFAULT_VERSION=\"v$$new_version\"/" install.sh; \
 		sed -i 's/\$$DefaultVersion = "v[^"]*"/\$$DefaultVersion = "v'"$$new_version"'"/' install.ps1; \
 	fi; \
@@ -245,7 +245,7 @@ publish: ## 发布到 crates.io（NOTE='xxx' make publish 或 AI 自动生成）
 	@$(MAKE) bump-version
 	@$(MAKE) release
 	@git add .
-	@version=$$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/'); \
+	@version=$$(grep '^version' crates/j-cli/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/'); \
 	note_file=$$(mktemp); \
 	changelog_tmp=$$(mktemp); \
 	prompt_file=$$(mktemp); \
@@ -281,7 +281,7 @@ publish: ## 发布到 crates.io（NOTE='xxx' make publish 或 AI 自动生成）
 				gsub(/\{\{log_range\}\}/, log_range); \
 				if (/\{\{git_log\}\}/) { while ((getline l < log_file) > 0) print l; close(log_file); next } \
 				print \
-			}' prompts/release-notes.md > "$$prompt_file"; \
+			}' crates/j-cli/prompts/release-notes.md > "$$prompt_file"; \
 		ai_out=$$(mktemp); \
 		j ai --bypass --no-render -- "$$(cat "$$prompt_file")" 2>/dev/null | tee "$$ai_out"; \
 		echo ""; \
@@ -306,7 +306,7 @@ publish: ## 发布到 crates.io（NOTE='xxx' make publish 或 AI 自动生成）
 	git push origin $(GIT_BRANCH); \
 	git push origin "v$$version"; \
 	echo "📤 发布 j-agent 到 crates.io..."; \
-	cd j-agent && cargo publish --registry crates-io --allow-dirty && cd ..; \
+	cd crates/j-agent && cargo publish --registry crates-io --allow-dirty && cd ../..; \
 	echo "📤 发布 j-cli 到 crates.io..."; \
 	cargo publish --registry crates-io --allow-dirty; \
 	echo "☑️ 已发布 v$$version! 验证: cargo search j-cli"
@@ -317,7 +317,7 @@ release-note: ## 预览 CHANGELOG.md 中最新版本的 release notes
 publish-check: ## 发布前检查（dry-run）
 	@echo "🔍 发布前检查（dry-run）..."
 	@echo "📦 检查 j-agent..."
-	@cd j-agent && cargo publish --registry crates-io --dry-run && cd ..
+	@cd crates/j-agent && cargo publish --registry crates-io --dry-run && cd ../..
 	@echo "📦 检查 j-cli..."
 	@cargo publish --registry crates-io --dry-run
 	@echo "☑️ 检查通过"
@@ -342,20 +342,20 @@ ifndef V
 	@exit 1
 endif
 	@echo "📌 设置版本号为 $(V)..."
-	@cli_ver=$$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/'); \
-	agent_ver=$$(grep '^version' j-agent/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/'); \
+	@cli_ver=$$(grep '^version' crates/j-cli/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/'); \
+	agent_ver=$$(grep '^version' crates/j-agent/Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/'); \
 	echo "  j-cli: $$cli_ver → $(V)"; \
 	echo "  j-agent: $$agent_ver → $(V)"; \
 	if [[ "$$OSTYPE" == "darwin"* ]]; then \
-		sed -i '' "s/^version = \"$$cli_ver\"/version = \"$(V)\"/" Cargo.toml; \
-		sed -i '' "s/^version = \"$$agent_ver\"/version = \"$(V)\"/" j-agent/Cargo.toml; \
-		sed -i '' "s/\(j-agent.*version = \"\)[^\"]*\"/\1$(V)\"/" Cargo.toml; \
+		sed -i '' "s/^version = \"$$cli_ver\"/version = \"$(V)\"/" crates/j-cli/Cargo.toml; \
+		sed -i '' "s/^version = \"$$agent_ver\"/version = \"$(V)\"/" crates/j-agent/Cargo.toml; \
+		sed -i '' "s/\(j-agent.*version = \"\)[^\"]*\"/\1$(V)\"/" crates/j-cli/Cargo.toml; \
 		sed -i '' "s/DEFAULT_VERSION=\"v[^\"]*\"/DEFAULT_VERSION=\"v$(V)\"/" install.sh; \
 		sed -i '' 's/\$$DefaultVersion = "v[^"]*"/\$$DefaultVersion = "v$(V)"/' install.ps1; \
 	else \
-		sed -i "s/^version = \"$$cli_ver\"/version = \"$(V)\"/" Cargo.toml; \
-		sed -i "s/^version = \"$$agent_ver\"/version = \"$(V)\"/" j-agent/Cargo.toml; \
-		sed -i "s/\(j-agent.*version = \"\)[^\"]*\"/\1$(V)\"/" Cargo.toml; \
+		sed -i "s/^version = \"$$cli_ver\"/version = \"$(V)\"/" crates/j-cli/Cargo.toml; \
+		sed -i "s/^version = \"$$agent_ver\"/version = \"$(V)\"/" crates/j-agent/Cargo.toml; \
+		sed -i "s/\(j-agent.*version = \"\)[^\"]*\"/\1$(V)\"/" crates/j-cli/Cargo.toml; \
 		sed -i "s/DEFAULT_VERSION=\"v[^\"]*\"/DEFAULT_VERSION=\"v$(V)\"/" install.sh; \
 		sed -i 's/\$$DefaultVersion = "v[^"]*"/\$$DefaultVersion = "v$(V)"/' install.ps1; \
 	fi; \
@@ -402,7 +402,7 @@ check: ## 检查代码（不构建）
 	@echo "☑️ 代码检查完成"
 
 check-lint: ## 运行完整合规性检查脚本
-	@bash scripts/check_lint.sh
+	@bash crates/j-cli/scripts/check_lint.sh
 
 clippy: lint ## clippy 别名
 

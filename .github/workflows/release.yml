@@ -30,10 +30,10 @@ jobs:
           INSTALL_SOURCE: github
 
       - name: Build j-indicator
-        run: swiftc helpers/indicator.swift -o target/aarch64-apple-darwin/release/j-indicator -O
+        run: swiftc crates/j-cli/helpers/indicator.swift -o target/aarch64-apple-darwin/release/j-indicator -O
 
       - name: Build j-ax
-        run: swiftc helpers/ax.swift -o target/aarch64-apple-darwin/release/j-ax -O -framework Cocoa -framework ApplicationServices
+        run: swiftc crates/j-cli/helpers/ax.swift -o target/aarch64-apple-darwin/release/j-ax -O -framework Cocoa -framework ApplicationServices
 
       - name: Package
         run: |
