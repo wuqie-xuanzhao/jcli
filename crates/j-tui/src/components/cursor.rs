@@ -10,7 +10,12 @@ use ratatui::{
 };
 
 /// 构建带行内光标的 span 列表（单行）
-pub fn cursor_spans<'a>(value: &str, cursor: usize, style: Style, theme: &EditorTheme) -> Vec<Span<'a>> {
+pub fn cursor_spans<'a>(
+    value: &str,
+    cursor: usize,
+    style: Style,
+    theme: &EditorTheme,
+) -> Vec<Span<'a>> {
     let chars: Vec<char> = value.chars().collect();
     let before: String = chars[..cursor.min(chars.len())].iter().collect();
     let cursor_ch = if cursor < chars.len() {

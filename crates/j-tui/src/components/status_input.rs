@@ -31,7 +31,12 @@ pub struct StatusInputParams<'a> {
 ///
 /// 渲染一个带边框的单行输入框，标签在左侧，输入文本在中间，提示在右侧。
 /// 同时设置终端光标位置以支持光标闪烁。
-pub fn draw_status_input(f: &mut Frame, area: Rect, params: &StatusInputParams<'_>, theme: &EditorTheme) {
+pub fn draw_status_input(
+    f: &mut Frame,
+    area: Rect,
+    params: &StatusInputParams<'_>,
+    theme: &EditorTheme,
+) {
     let cursor_style = Style::default().fg(theme.cursor_fg).bg(theme.cursor_bg);
     let text_style = Style::default().fg(theme.text_normal);
     let placeholder_style = Style::default().fg(theme.text_dim);

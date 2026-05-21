@@ -55,7 +55,12 @@ pub(super) fn draw_tab_archive_list<'a>(app: &ChatApp) -> ItemList<'a> {
         let name_truncated: String = archive.name.chars().take(40).collect();
         let time_str = &archive.created_at;
         let secondary = format!("({} \u{6761}, {})", archive.messages.len(), time_str);
-        list.push(selectable_row(&name_truncated, &secondary, is_selected, &et));
+        list.push(selectable_row(
+            &name_truncated,
+            &secondary,
+            is_selected,
+            &et,
+        ));
     }
     list
 }

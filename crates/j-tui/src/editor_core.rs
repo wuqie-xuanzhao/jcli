@@ -13,6 +13,10 @@ pub mod theme;
 pub mod vim;
 pub mod wrap_engine;
 
+pub use editor::{
+    CursorPolicy, EditorAction, MarkdownEditor, MarkdownEditorOpts, ThemeGalleryItem,
+};
+pub use editor::{
+    open_markdown_editor, open_markdown_editor_on_terminal, open_markdown_editor_with_content,
+};
 pub use theme::{EditorTheme, HighlightFn};
-pub use editor::{CursorPolicy, MarkdownEditor, MarkdownEditorOpts, ThemeGalleryItem, EditorAction};
-pub use editor::{open_markdown_editor, open_markdown_editor_on_terminal, open_markdown_editor_with_content};
