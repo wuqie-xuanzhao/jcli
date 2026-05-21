@@ -1060,7 +1060,7 @@ fn push_grep_summary(
 /// WebSearch 结果：结构化搜索结果
 ///
 /// 输入格式（由 format_search_results 生成）：
-/// ```
+/// ```text
 /// 搜索: query
 ///
 /// 1. Title
