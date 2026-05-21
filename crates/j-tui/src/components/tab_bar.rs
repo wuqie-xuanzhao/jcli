@@ -1,6 +1,6 @@
 //! Tab 栏组件
 
-use crate::theme::Theme;
+use crate::editor_core::EditorTheme;
 use ratatui::{
     style::{Modifier, Style},
     text::{Line, Span},
@@ -9,7 +9,7 @@ use ratatui::{
 use super::consts::SEPARATOR_V;
 
 /// Tab 栏（支持任意 tab 列表）
-pub fn tab_bar<'a>(tabs: &[(&str, bool)], hint: &str, theme: &Theme) -> Line<'a> {
+pub fn tab_bar<'a>(tabs: &[(&str, bool)], hint: &str, theme: &EditorTheme) -> Line<'a> {
     let mut spans: Vec<Span<'a>> = vec![Span::styled("  ", Style::default())];
     for (i, (label, active)) in tabs.iter().enumerate() {
         if i > 0 {

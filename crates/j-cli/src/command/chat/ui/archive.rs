@@ -2,6 +2,7 @@ use crate::command::chat::app::ChatApp;
 use crate::tui::components::{
     POINTER_EMPTY, POINTER_SELECTED, cursor_spans, help_key_row, section_header, separator_line,
 };
+use crate::tui::editor_core::EditorTheme;
 use ratatui::{
     layout::Rect,
     style::{Modifier, Style},
@@ -13,16 +14,17 @@ use ratatui::{
 #[allow(clippy::vec_init_then_push)]
 pub fn draw_archive_confirm(f: &mut ratatui::Frame, area: Rect, app: &ChatApp) {
     let t = &app.ui.theme;
+    let et = EditorTheme::from(t);
     let mut lines: Vec<Line> = Vec::new();
 
     lines.push(Line::from(""));
     lines.push(section_header(
         "\u{1f5c2}\u{fe0f}",
         "\u{5f52}\u{6863}\u{5f53}\u{524d}\u{5bf9}\u{8bdd}",
-        t,
+        &et,
     ));
     lines.push(Line::from(""));
-    lines.push(separator_line(area.width, t));
+    lines.push(separator_line(area.width, &et));
     lines.push(Line::from(""));
     lines.push(Line::from(Span::styled(
         "  \u{5373}\u{5c06}\u{5f52}\u{6863}\u{5f53}\u{524d}\u{5bf9}\u{8bdd}\u{ff0c}\u{5f52}\u{6863}\u{540e}\u{5f53}\u{524d}\u{4f1a}\u{8bdd}\u{5c06}\u{88ab}\u{6e05}\u{7a7a}\u{3002}",
@@ -48,7 +50,7 @@ pub fn draw_archive_confirm(f: &mut ratatui::Frame, area: Rect, app: &ChatApp) {
                 &app.ui.archive_custom_name,
                 app.ui.archive_edit_cursor,
                 value_style,
-                t,
+                &et,
             )
             .into_iter()
             .filter(|s| s.content != " \u{270f}\u{fe0f}") // 去掉编辑图标
@@ -73,15 +75,15 @@ pub fn draw_archive_confirm(f: &mut ratatui::Frame, area: Rect, app: &ChatApp) {
             Style::default().fg(t.text_dim),
         )));
         lines.push(Line::from(""));
-        lines.push(separator_line(area.width, t));
+        lines.push(separator_line(area.width, &et));
         lines.push(Line::from(""));
         lines.push(help_key_row(
             "Enter",
             "\u{786e}\u{8ba4}\u{5f52}\u{6863}",
             7,
-            t,
+            &et,
         ));
-        lines.push(help_key_row("Esc", "\u{53d6}\u{6d88}", 7, t));
+        lines.push(help_key_row("Esc", "\u{53d6}\u{6d88}", 7, &et));
     } else {
         lines.push(Line::from(vec![
             Span::styled(
@@ -96,27 +98,27 @@ pub fn draw_archive_confirm(f: &mut ratatui::Frame, area: Rect, app: &ChatApp) {
             ),
         ]));
         lines.push(Line::from(""));
-        lines.push(separator_line(area.width, t));
+        lines.push(separator_line(area.width, &et));
         lines.push(Line::from(""));
         lines.push(help_key_row(
             "Enter",
             "\u{4f7f}\u{7528}\u{9ed8}\u{8ba4}\u{540d}\u{79f0}\u{5f52}\u{6863}",
             7,
-            t,
+            &et,
         ));
         lines.push(help_key_row(
             "n",
             "\u{81ea}\u{5b9a}\u{4e49}\u{540d}\u{79f0}",
             7,
-            t,
+            &et,
         ));
         lines.push(help_key_row(
             "d",
             "\u{4ec5}\u{6e05}\u{7a7a}\u{4e0d}\u{5f52}\u{6863}",
             7,
-            t,
+            &et,
         ));
-        lines.push(help_key_row("Esc", "\u{53d6}\u{6d88}", 7, t));
+        lines.push(help_key_row("Esc", "\u{53d6}\u{6d88}", 7, &et));
     }
 
     let block = Block::default()
@@ -136,6 +138,7 @@ pub fn draw_archive_confirm(f: &mut ratatui::Frame, area: Rect, app: &ChatApp) {
 #[allow(clippy::vec_init_then_push)]
 pub fn draw_archive_list(f: &mut ratatui::Frame, area: Rect, app: &ChatApp) {
     let t = &app.ui.theme;
+    let et = EditorTheme::from(t);
 
     if app.ui.restore_confirm_needed {
         let mut lines: Vec<Line> = Vec::new();
@@ -143,7 +146,7 @@ pub fn draw_archive_list(f: &mut ratatui::Frame, area: Rect, app: &ChatApp) {
         lines.push(section_header(
             "\u{26a0}\u{fe0f}",
             "\u{786e}\u{8ba4}\u{8fd8}\u{539f}",
-            t,
+            &et,
         ));
         lines.push(Line::from(""));
         lines.push(Line::from(Span::styled(
@@ -151,7 +154,7 @@ pub fn draw_archive_list(f: &mut ratatui::Frame, area: Rect, app: &ChatApp) {
             Style::default().fg(t.text_white),
         )));
         lines.push(Line::from(""));
-        lines.push(separator_line(area.width, t));
+        lines.push(separator_line(area.width, &et));
         lines.push(Line::from(""));
         if let Some(archive) = app.ui.archives.get(app.ui.archive_list_index) {
             lines.push(Line::from(vec![
@@ -172,9 +175,9 @@ pub fn draw_archive_list(f: &mut ratatui::Frame, area: Rect, app: &ChatApp) {
             "y/Enter",
             "\u{786e}\u{8ba4}\u{8fd8}\u{539f}",
             8,
-            t,
+            &et,
         ));
-        lines.push(help_key_row("Esc", "\u{53d6}\u{6d88}", 8, t));
+        lines.push(help_key_row("Esc", "\u{53d6}\u{6d88}", 8, &et));
 
         let block = Block::default()
             .borders(Borders::ALL)

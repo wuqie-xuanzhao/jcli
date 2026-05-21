@@ -16,6 +16,7 @@ use crate::command::chat::{
 use crate::util::text::display_width;
 
 use crate::tui::components;
+use crate::tui::editor_core::EditorTheme;
 
 /// 绘制底部提示栏
 pub fn draw_hint_bar(f: &mut ratatui::Frame, area: Rect, app: &ChatApp) {
@@ -170,6 +171,7 @@ fn config_hints(app: &ChatApp) -> Vec<(&'static str, &'static str)> {
 
 /// 渲染提示栏
 fn render_hint_bar(f: &mut ratatui::Frame, area: Rect, t: &Theme, hints: &[(&str, &str)]) {
+    let et = EditorTheme::from(t);
     let avail_width = area.width as usize;
     let sep_w = display_width("  │  ");
     let mut spans: Vec<Span> = Vec::new();
@@ -185,7 +187,7 @@ fn render_hint_bar(f: &mut ratatui::Frame, area: Rect, t: &Theme, hints: &[(&str
         if i > 0 {
             spans.push(Span::styled("  │  ", Style::default().fg(t.hint_separator)));
         }
-        spans.extend(components::hint_spans(key, desc, t));
+        spans.extend(components::hint_spans(key, desc, &et));
         used += need_w;
     }
 

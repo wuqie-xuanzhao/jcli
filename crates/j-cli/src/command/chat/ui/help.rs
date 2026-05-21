@@ -16,11 +16,13 @@ use crate::tui::components;
 use crate::tui::components::selection::{
     compute_line_selection_range, rebuild_spans_with_selection,
 };
+use crate::tui::editor_core::EditorTheme;
 
 /// 构建帮助页面的渲染行
 fn build_help_lines(app: &ChatApp) -> Vec<Line<'static>> {
     let t = &app.ui.theme;
-    let sep = components::separator_line(u16::MAX, t);
+    let et = EditorTheme::from(t);
+    let sep = components::separator_line(u16::MAX, &et);
 
     let shortcuts: &[(&str, &str)] = &[
         ("Enter", "发送消息"),
@@ -44,18 +46,18 @@ fn build_help_lines(app: &ChatApp) -> Vec<Line<'static>> {
             Style::default().fg(t.text_dim),
         )),
         Line::from(""),
-        components::section_header("📖", "快捷键帮助", t),
+        components::section_header("📖", "快捷键帮助", &et),
         Line::from(""),
         sep.clone(),
         Line::from(""),
     ];
     for (key, desc) in shortcuts {
-        lines.push(components::help_key_row(key, desc, 15, t));
+        lines.push(components::help_key_row(key, desc, 15, &et));
     }
     lines.push(Line::from(""));
     lines.push(sep);
     lines.push(Line::from(""));
-    lines.push(components::section_header("📁", "配置文件:", t));
+    lines.push(components::section_header("📁", "配置文件:", &et));
     lines.push(Line::from(Span::styled(
         format!("     {}", agent_config_path().display()),
         Style::default().fg(t.help_path),

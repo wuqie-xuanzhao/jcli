@@ -2,7 +2,7 @@
 //!
 //! 提供统一的命令面板弹窗渲染，用于 chat / todo / notebook / help 等模块。
 
-use crate::theme::Theme;
+use crate::editor_core::EditorTheme;
 use ratatui::{
     Frame,
     layout::Rect,
@@ -38,7 +38,7 @@ pub struct CommandPopupConfig<'a> {
     /// 高亮前景色（默认使用 `theme.bg_primary`）
     pub highlight_fg: Option<Color>,
     /// 主题样式
-    pub theme: &'a Theme,
+    pub theme: &'a EditorTheme,
 }
 
 /// 绘制命令面板弹窗

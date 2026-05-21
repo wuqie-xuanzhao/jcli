@@ -1,5 +1,6 @@
 use crate::command::chat::app::ChatApp;
 use crate::tui::components::{ItemList, selectable_row};
+use crate::tui::editor_core::EditorTheme;
 use ratatui::{
     style::{Modifier, Style},
     text::{Line, Span},
@@ -119,6 +120,7 @@ pub(super) fn draw_tab_session_header<'a>(lines: &mut Vec<Line<'a>>, app: &ChatA
 /// Session tab 可滚动列表（历史会话列表）
 pub(super) fn draw_tab_session_list<'a>(app: &ChatApp) -> ItemList<'a> {
     let t = &app.ui.theme;
+    let et = EditorTheme::from(t);
     let mut list = ItemList::new(t.bg_primary);
 
     for (i, session) in app.ui.session_list.iter().enumerate() {
@@ -135,7 +137,7 @@ pub(super) fn draw_tab_session_list<'a>(app: &ChatApp) -> ItemList<'a> {
             &preview_truncated,
             &secondary,
             is_selected,
-            t,
+            &et,
         ));
     }
     list

@@ -5,7 +5,7 @@ use ratatui::{
     text::Span,
 };
 
-use crate::tui::editor_core::EditorTheme;
+use crate::editor_core::EditorTheme;
 
 /// 语法高亮样式集合
 pub struct SyntaxStyles {

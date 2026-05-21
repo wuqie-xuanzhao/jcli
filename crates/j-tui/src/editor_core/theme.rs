@@ -21,6 +21,11 @@ pub struct EditorTheme {
     pub text_normal: Color,
     pub text_dim: Color,
     pub text_bold: Color,
+    pub text_very_dim: Color,
+    pub text_white: Color,
+
+    // ===== 分隔线 =====
+    pub separator: Color,
 
     // ===== Markdown =====
     pub md_h1: Color,
@@ -46,6 +51,24 @@ pub struct EditorTheme {
 
     // ===== 标签 =====
     pub label_ai: Color,
+
+    // ===== 配置界面 =====
+    pub config_pointer: Color,
+    pub config_label_selected: Color,
+    pub config_label: Color,
+    pub config_value: Color,
+    pub config_edit_bg: Color,
+    pub config_tab_active_bg: Color,
+    pub config_tab_active_fg: Color,
+    pub config_tab_inactive: Color,
+    pub config_toggle_on: Color,
+    pub config_toggle_off: Color,
+    pub config_dim: Color,
+
+    // ===== 帮助界面 =====
+    pub help_title: Color,
+    pub help_key: Color,
+    pub help_desc: Color,
 
     // ===== 代码高亮 =====
     pub code_default: Color,
@@ -130,7 +153,7 @@ impl crate::markdown::theme::MdStyle for EditorTheme {
         self.table_body
     }
 
-    fn code_syntax_theme(&self) -> crate::tui::editor_core::EditorTheme {
+    fn code_syntax_theme(&self) -> EditorTheme {
         self.clone()
     }
 }

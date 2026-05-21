@@ -3,6 +3,7 @@ use crate::tui::components::{
     CommandItem, CommandPopupConfig, ConfirmDialogConfig, StatusInputParams, cursor_wrapped_lines,
     draw_command_popup as render_command_popup, draw_confirm_dialog, draw_status_input,
 };
+use crate::tui::editor_core::EditorTheme;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
@@ -216,6 +217,7 @@ fn build_adding_item(
     selected: bool,
     theme: &crate::theme::Theme,
 ) -> ListItem<'static> {
+    let et = EditorTheme::from(theme);
     let pointer = if selected {
         Span::styled(
             " ❯ ",
@@ -229,7 +231,7 @@ fn build_adding_item(
 
     let content_width = width.saturating_sub(3); // pointer
     let cursor_lines =
-        cursor_wrapped_lines(input, cursor_pos, content_width, Some("输入标题…"), theme);
+        cursor_wrapped_lines(input, cursor_pos, content_width, Some("输入标题…"), &et);
 
     let mut item_lines: Vec<Line<'static>> = Vec::new();
     for (i, line) in cursor_lines.lines.into_iter().enumerate() {
@@ -276,6 +278,7 @@ fn render_editor(f: &mut ratatui::Frame, app: &mut NotebookApp, area: Rect) {
 
 /// 渲染状态栏
 fn render_status_bar(f: &mut ratatui::Frame, app: &NotebookApp, area: Rect) {
+    let et = EditorTheme::from(&app.theme);
     match &app.mode {
         AppMode::Adding => {
             let status = Paragraph::new(Line::from(vec![
@@ -329,7 +332,7 @@ fn render_status_bar(f: &mut ratatui::Frame, app: &NotebookApp, area: Rect) {
                     placeholder: "输入目录名…",
                     hint: "Enter 确认 | Esc 取消",
                 },
-                &app.theme,
+                &et,
             );
         }
         AppMode::Mv => {
@@ -344,7 +347,7 @@ fn render_status_bar(f: &mut ratatui::Frame, app: &NotebookApp, area: Rect) {
                     placeholder: "输入目标路径…",
                     hint: "Enter 确认 | Esc 取消",
                 },
-                &app.theme,
+                &et,
             );
         }
         AppMode::Search => {
@@ -359,7 +362,7 @@ fn render_status_bar(f: &mut ratatui::Frame, app: &NotebookApp, area: Rect) {
                     placeholder: "输入关键词…",
                     hint: "Enter 搜索 | Esc 取消",
                 },
-                &app.theme,
+                &et,
             );
         }
         AppMode::ConfirmDelete => {
@@ -390,7 +393,7 @@ fn render_status_bar(f: &mut ratatui::Frame, app: &NotebookApp, area: Rect) {
                     placeholder: "输入筛选…",
                     hint: "↑↓ 选择 | Enter 确认 | Esc 取消",
                 },
-                &app.theme,
+                &et,
             );
         }
         AppMode::RatioInput => {
@@ -405,7 +408,7 @@ fn render_status_bar(f: &mut ratatui::Frame, app: &NotebookApp, area: Rect) {
                     placeholder: "20:80",
                     hint: "如 20:80",
                 },
-                &app.theme,
+                &et,
             );
         }
         _ => {
@@ -427,6 +430,7 @@ fn render_status_bar(f: &mut ratatui::Frame, app: &NotebookApp, area: Rect) {
 
 /// 绘制命令面板弹窗（浮动在主区域底部）
 fn draw_command_popup(f: &mut ratatui::Frame, app: &mut NotebookApp, main_area: Rect) {
+    let et = EditorTheme::from(&app.theme);
     let items = app.filtered_cmd_items();
     let cmd_items: Vec<CommandItem<'_>> = items
         .iter()
@@ -447,7 +451,7 @@ fn draw_command_popup(f: &mut ratatui::Frame, app: &mut NotebookApp, main_area: 
             items: cmd_items,
             selected: app.cmd_popup_selected,
             highlight_fg: Some(Color::Black),
-            theme: &app.theme,
+            theme: &et,
         },
     );
 }

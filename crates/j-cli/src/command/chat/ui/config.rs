@@ -14,6 +14,7 @@ mod tools;
 
 use crate::command::chat::app::{ChatApp, CommandsMode, ConfigTab, ConfigTabHitBox};
 use crate::tui::components::{separator_line, tab_bar};
+use crate::tui::editor_core::EditorTheme;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
@@ -52,6 +53,7 @@ fn render_block_lines(
 /// 绘制顶部 Tab 栏（支持窄屏水平滚动）
 fn draw_tab_bar_line<'a>(app: &ChatApp) -> Line<'a> {
     let current = app.ui.config_tab;
+    let et = EditorTheme::from(&app.ui.theme);
     let all_tabs = [
         ConfigTab::Model,
         ConfigTab::Session,
@@ -70,7 +72,7 @@ fn draw_tab_bar_line<'a>(app: &ChatApp) -> Line<'a> {
     tab_bar(
         &tabs,
         "\u{2190}\u{2192} \u{5207}\u{6362}\u{6807}\u{7b7e}",
-        &app.ui.theme,
+        &et,
     )
 }
 
@@ -121,6 +123,7 @@ pub fn draw_config_screen(f: &mut ratatui::Frame, area: Rect, app: &mut ChatApp)
     // ── Model Tab 不再需要水平滚动偏移调整 ──
 
     let t = &app.ui.theme;
+    let et = EditorTheme::from(t);
     let bg = t.bg_primary;
 
     let title = match app.ui.config_tab {
@@ -225,7 +228,7 @@ pub fn draw_config_screen(f: &mut ratatui::Frame, area: Rect, app: &mut ChatApp)
             Line::from(""),
             draw_tab_bar_line(app),
             Line::from(""),
-            separator_line(area.width, t),
+            separator_line(area.width, &et),
         ];
         all_lines.append(&mut tab_header_lines);
         all_lines.append(&mut list_lines);
@@ -269,7 +272,7 @@ pub fn draw_config_screen(f: &mut ratatui::Frame, area: Rect, app: &mut ChatApp)
         Line::from(""),
         draw_tab_bar_line(app),
         Line::from(""),
-        separator_line(area.width, t),
+        separator_line(area.width, &et),
     ];
     header_lines.append(&mut tab_header_lines);
 

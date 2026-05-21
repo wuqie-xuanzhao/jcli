@@ -6,6 +6,7 @@ use crate::tui::components::{
     ItemList, TOGGLE_OFF, TOGGLE_ON, TextFieldRowCtx, ToggleRowCtx, pointer_span, text_field_row,
     toggle_row,
 };
+use crate::tui::editor_core::EditorTheme;
 use crate::util::text::display_width;
 use ratatui::{
     style::{Modifier, Style},
@@ -15,6 +16,7 @@ use ratatui::{
 /// Model tab：左侧 Provider 列表
 pub(super) fn draw_tab_model_providers<'a>(app: &ChatApp, area_width: u16) -> ItemList<'a> {
     let t = &app.ui.theme;
+    let et = EditorTheme::from(t);
     let item_bg = t.bg_primary;
     let mut list = ItemList::new(item_bg);
     let provider_count = app.state.agent_config.providers.len();
@@ -33,7 +35,7 @@ pub(super) fn draw_tab_model_providers<'a>(app: &ChatApp, area_width: u16) -> It
         let focused = !app.ui.model_in_fields && is_current;
 
         // 箭头和圆点不参与高亮，使用统一风格
-        let pointer = pointer_span(focused, t);
+        let pointer = pointer_span(focused, &et);
         let marker_style = if is_active {
             Style::default().fg(t.config_toggle_on)
         } else {
@@ -78,6 +80,7 @@ pub(super) fn draw_tab_model_providers<'a>(app: &ChatApp, area_width: u16) -> It
 /// Model tab：右侧配置字段详情
 pub(super) fn draw_tab_model_detail<'a>(app: &ChatApp) -> ItemList<'a> {
     let t = &app.ui.theme;
+    let et = EditorTheme::from(t);
     let mut list = ItemList::new(t.bg_primary);
     let provider_count = app.state.agent_config.providers.len();
 
@@ -125,7 +128,7 @@ pub(super) fn draw_tab_model_detail<'a>(app: &ChatApp) -> ItemList<'a> {
                 is_on: toggle_on,
                 selected: is_selected,
                 hint: "Enter 切换".to_string(),
-                theme: t,
+                theme: &et,
             })
         } else {
             text_field_row(&TextFieldRowCtx {
@@ -134,7 +137,7 @@ pub(super) fn draw_tab_model_detail<'a>(app: &ChatApp) -> ItemList<'a> {
                 selected: is_selected,
                 editing: app.ui.config_editing,
                 cursor: app.ui.config_edit_cursor,
-                theme: t,
+                theme: &et,
             })
         };
         list.push(line);

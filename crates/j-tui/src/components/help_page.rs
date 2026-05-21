@@ -2,7 +2,7 @@
 //!
 //! 提供统一的帮助页面渲染框架，用于 todo / notebook 等模块。
 
-use crate::theme::Theme;
+use crate::editor_core::EditorTheme;
 use ratatui::{
     Frame,
     layout::Rect,
@@ -40,7 +40,7 @@ pub struct HelpPageConfig<'a> {
     /// 额外尾部行（可选，如分割线 + 说明文字）
     pub footer_lines: Option<Vec<Line<'a>>>,
     /// 主题样式
-    pub theme: &'a Theme,
+    pub theme: &'a EditorTheme,
 }
 
 /// 绘制帮助页面

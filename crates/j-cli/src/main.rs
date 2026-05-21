@@ -4,7 +4,8 @@ mod command;
 mod config;
 mod constants;
 mod interactive;
-mod markdown;
+// markdown 模块已迁移至 j-tui，此处重新导出以保持 crate::markdown 路径兼容
+pub use j_tui::markdown;
 mod theme;
 mod tui;
 mod util;

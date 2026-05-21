@@ -7,6 +7,7 @@ use crate::command::chat::ui::components::{
 };
 use crate::constants::CONFIG_GLOBAL_FIELDS_TAB;
 use crate::tui::components::{ItemList, ToggleListItemCtx, toggle_list_item};
+use crate::tui::editor_core::EditorTheme;
 use ratatui::{
     style::Style,
     text::{Line, Span},
@@ -100,6 +101,7 @@ fn draw_compact_exempt_sublist<'a>(
     t: &crate::theme::Theme,
     list: &mut ItemList<'a>,
 ) {
+    let et = EditorTheme::from(t);
     use crate::command::chat::context::compact::BUILTIN_EXEMPT_TOOLS;
 
     // 标题行 + 空行
@@ -135,7 +137,7 @@ fn draw_compact_exempt_sublist<'a>(
             selected,
             desc: None,
             tag: None,
-            theme: t,
+            theme: &et,
         }));
     }
 }

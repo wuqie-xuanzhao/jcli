@@ -12,7 +12,7 @@ use super::{
     wrap_engine::WrapEngine,
 };
 
-use crate::tui::components::selection::{normalize_selection, rebuild_spans_with_selection};
+use crate::components::selection::{normalize_selection, rebuild_spans_with_selection};
 use crossterm::{
     event::{self, Event, MouseButton, MouseEvent, MouseEventKind},
     execute,

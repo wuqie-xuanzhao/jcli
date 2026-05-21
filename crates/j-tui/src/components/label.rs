@@ -1,13 +1,13 @@
 //! 标签 / 说明文字组件
 
-use crate::theme::Theme;
+use crate::editor_core::EditorTheme;
 use ratatui::{
     style::{Modifier, Style},
     text::Span,
 };
 
 /// 标签 span（固定显示宽度，左对齐，CJK 感知）
-pub fn label_span<'a>(text: &str, width: usize, selected: bool, theme: &Theme) -> Span<'a> {
+pub fn label_span<'a>(text: &str, width: usize, selected: bool, theme: &EditorTheme) -> Span<'a> {
     use unicode_width::UnicodeWidthStr;
     let style = if selected {
         Style::default()
@@ -26,7 +26,7 @@ pub fn label_span<'a>(text: &str, width: usize, selected: bool, theme: &Theme) -
 }
 
 /// 说明文字 span（固定显示宽度，超长截断加 "..."，CJK 感知）
-pub fn desc_span<'a>(text: &str, max_width: usize, theme: &Theme) -> Span<'a> {
+pub fn desc_span<'a>(text: &str, max_width: usize, theme: &EditorTheme) -> Span<'a> {
     use unicode_width::UnicodeWidthStr;
     if text.is_empty() {
         return Span::styled(String::new(), Style::default());
@@ -62,7 +62,7 @@ pub fn desc_span<'a>(text: &str, max_width: usize, theme: &Theme) -> Span<'a> {
 }
 
 /// 值的样式（普通/选中/编辑中）
-pub fn value_style(selected: bool, editing: bool, theme: &Theme) -> Style {
+pub fn value_style(selected: bool, editing: bool, theme: &EditorTheme) -> Style {
     if editing && selected {
         Style::default()
             .fg(theme.text_white)

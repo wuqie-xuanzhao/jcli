@@ -1,6 +1,6 @@
 //! 提示栏组件
 
-use crate::theme::Theme;
+use crate::editor_core::EditorTheme;
 use ratatui::{
     style::{Modifier, Style},
     text::{Line, Span},
@@ -9,7 +9,7 @@ use ratatui::{
 use super::consts::INDENT;
 
 /// 帮助页快捷键行
-pub fn help_key_row<'a>(key: &str, desc: &str, key_width: usize, theme: &Theme) -> Line<'a> {
+pub fn help_key_row<'a>(key: &str, desc: &str, key_width: usize, theme: &EditorTheme) -> Line<'a> {
     Line::from(vec![
         Span::styled(INDENT, Style::default()),
         Span::styled(
@@ -23,7 +23,7 @@ pub fn help_key_row<'a>(key: &str, desc: &str, key_width: usize, theme: &Theme) 
 }
 
 /// 底部提示栏单项 spans
-pub fn hint_spans<'a>(key: &str, desc: &str, theme: &Theme) -> Vec<Span<'a>> {
+pub fn hint_spans<'a>(key: &str, desc: &str, theme: &EditorTheme) -> Vec<Span<'a>> {
     vec![
         Span::styled(
             format!(" {key} "),

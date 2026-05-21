@@ -1,9 +1,69 @@
 use super::*;
-use crate::command::chat::render::theme::{Theme, ThemeName};
+use crate::editor_core::EditorTheme;
 use crate::markdown::ir::Inline;
 use crate::markdown::render::table::wrap_cell_inlines;
 use crate::util::text::char_width;
 use ratatui::style::{Modifier, Style};
+
+/// Construct a test EditorTheme with sensible defaults.
+fn test_theme() -> EditorTheme {
+    use ratatui::style::Color;
+    EditorTheme {
+        bg_primary: Color::Reset,
+        bg_input: Color::Reset,
+        code_bg: Color::DarkGray,
+        cursor_fg: Color::Black,
+        cursor_bg: Color::Cyan,
+        text_normal: Color::White,
+        text_dim: Color::DarkGray,
+        text_bold: Color::White,
+        text_very_dim: Color::DarkGray,
+        text_white: Color::White,
+        separator: Color::DarkGray,
+        md_h1: Color::LightCyan,
+        md_h2: Color::Cyan,
+        md_h3: Color::LightBlue,
+        md_h4: Color::Blue,
+        md_heading_sep: Color::DarkGray,
+        md_link: Color::LightBlue,
+        md_list_bullet: Color::LightGreen,
+        md_blockquote_bar: Color::Cyan,
+        md_blockquote_bg: Color::Reset,
+        md_blockquote_text: Color::Gray,
+        md_inline_code_fg: Color::LightYellow,
+        md_inline_code_bg: Color::Reset,
+        md_rule: Color::DarkGray,
+        code_border: Color::DarkGray,
+        table_header: Color::LightCyan,
+        table_body: Color::Reset,
+        label_ai: Color::Green,
+        config_pointer: Color::Yellow,
+        config_label_selected: Color::Yellow,
+        config_label: Color::DarkGray,
+        config_value: Color::Reset,
+        config_edit_bg: Color::Reset,
+        config_tab_active_bg: Color::LightCyan,
+        config_tab_active_fg: Color::Reset,
+        config_tab_inactive: Color::DarkGray,
+        config_toggle_on: Color::LightGreen,
+        config_toggle_off: Color::Red,
+        config_dim: Color::DarkGray,
+        help_title: Color::LightCyan,
+        help_key: Color::Yellow,
+        help_desc: Color::Reset,
+        code_default: Color::Reset,
+        code_keyword: Color::LightMagenta,
+        code_string: Color::LightGreen,
+        code_comment: Color::DarkGray,
+        code_number: Color::LightYellow,
+        code_type: Color::LightYellow,
+        code_primitive: Color::LightCyan,
+        code_macro: Color::LightBlue,
+        code_lifetime: Color::LightYellow,
+        code_attribute: Color::LightCyan,
+        code_shell_var: Color::LightCyan,
+    }
+}
 
 /// 计算一行 Line 的实际显示宽度（基于 spans 中所有 content 的字符宽度之和）
 fn line_display_width(line: &Line<'_>) -> usize {
@@ -16,7 +76,7 @@ fn line_display_width(line: &Line<'_>) -> usize {
 /// 验证窄终端下表格竖线不错位：每行实际宽度不超过 max_width
 #[test]
 fn narrow_terminal_table_no_overflow() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     // 多列表格，包含中文宽字符内容
     let md = r"| 列1 | 列2 | 列3 |
 |-----|-----|-----|
@@ -42,7 +102,7 @@ fn narrow_terminal_table_no_overflow() {
 /// 验证极窄终端（10 字符）下表格渲染不溢出
 #[test]
 fn very_narrow_terminal_table_no_overflow() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let md = r"| A | B | C |
 |---|---|---|
 | 中文 | 测试 | 数据 |";
@@ -65,7 +125,7 @@ fn very_narrow_terminal_table_no_overflow() {
 /// 验证 `wrap_cell_inlines` 返回的子行宽度不超过 max_width（允许为 2，因为 max(2) 提升）
 #[test]
 fn wrap_cell_styled_width_constraint() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let base = Style::default();
     let code = Style::default();
 
@@ -99,7 +159,7 @@ fn wrap_cell_styled_width_constraint() {
 /// 验证截断逻辑正确工作：当 col_widths[i] 小于字符宽度时，内容被截断
 #[test]
 fn truncation_when_column_width_too_small() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     // 单列表格，包含一个宽度为 2 的中文字符
     let md = "| 中 |\n|---|\n| 文 |";
 
@@ -123,7 +183,7 @@ fn truncation_when_column_width_too_small() {
 /// 验证表格中行内代码样式正确保留
 #[test]
 fn table_inline_code_style_preserved() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     // 表格包含行内代码
     let md = "| 列1 | 列2 |\n|-----|-----|\n| `code` | 普通 |";
 
@@ -178,7 +238,7 @@ fn table_inline_code_style_preserved() {
 
 #[test]
 fn markdown_tabs_are_normalized_before_rendering() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let lines = markdown_to_lines("foo\tbar\r\nbaz", 20, &theme);
 
     for line in &lines {
@@ -205,7 +265,7 @@ fn markdown_tabs_are_normalized_before_rendering() {
 
 #[test]
 fn markdown_ansi_and_control_chars_are_sanitized_before_rendering() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let lines = markdown_to_lines("foo\x1b[31mbar\x1b[0m\x07baz", 40, &theme);
 
     for line in &lines {
@@ -236,7 +296,7 @@ fn markdown_ansi_and_control_chars_are_sanitized_before_rendering() {
 /// 验证宽终端下行内代码样式正确渲染
 #[test]
 fn table_inline_code_wide_terminal() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let md = "| 命令 | 说明 |\n|------|------|\n| `git status` | 查看状态 |\n| `cargo build` | 编译项目 |";
 
     let max_width = 60usize;
@@ -268,7 +328,7 @@ fn table_inline_code_wide_terminal() {
 /// 验证窄终端下行内代码仍保留样式
 #[test]
 fn table_inline_code_narrow_terminal() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let md = "| A | B |\n|---|---|\n| `code` | 文本 |";
 
     let max_width = 15usize;
@@ -306,7 +366,7 @@ fn table_inline_code_narrow_terminal() {
 /// 验证复杂表格（类似 hook.md）中行内代码样式正确渲染
 #[test]
 fn table_complex_inline_code_like_hook_md() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     // 模拟 hook.md 中的表格结构，包含大量行内代码
     let md = r"| 事件 | 触发时机 | 可读字段 | 可写字段 |
 |------|----------|----------|----------|
@@ -372,7 +432,7 @@ fn table_complex_inline_code_like_hook_md() {
 /// 直接使用 hook.md 中实际的表格内容测试行内代码渲染
 #[test]
 fn table_hook_md_actual_content() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     // 来自 hook.md 第 100-103 行的表格
     let md = r"| 事件 | 触发时机 | 可读字段 | 可写字段 |
 |------|----------|----------|----------|
@@ -432,7 +492,7 @@ fn table_hook_md_actual_content() {
 
 #[test]
 fn renders_plain_text() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let lines = markdown_to_lines("hello world", 80, &theme);
     // 至少有一行包含 hello world
     let content: String = lines
@@ -447,7 +507,7 @@ fn renders_plain_text() {
 
 #[test]
 fn renders_bold_text() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let lines = markdown_to_lines("this is **bold** text", 80, &theme);
     let all_spans: Vec<_> = lines.iter().flat_map(|l| l.spans.iter()).collect();
     let bold_span = all_spans.iter().find(|s| s.content.contains("bold"));
@@ -461,7 +521,7 @@ fn renders_bold_text() {
 
 #[test]
 fn renders_code_block_with_borders() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let md = "```rust\nfn main() {}\n```";
     let lines = markdown_to_lines(md, 80, &theme);
     // 应有顶边框和底边框
@@ -481,7 +541,7 @@ fn renders_code_block_with_borders() {
 
 #[test]
 fn renders_inline_code() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let lines = markdown_to_lines("use `cargo test` to run", 80, &theme);
     let code_span = lines
         .iter()
@@ -493,7 +553,7 @@ fn renders_inline_code() {
 
 #[test]
 fn renders_heading_with_prefix() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let lines = markdown_to_lines("# Title", 80, &theme);
     let content: String = lines
         .iter()
@@ -505,7 +565,7 @@ fn renders_heading_with_prefix() {
 
 #[test]
 fn long_heading_wraps_and_keeps_continuation_indent() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let max_width = 18;
     let lines = markdown_to_lines("# Heading wrap regression case", max_width, &theme);
     let rendered: Vec<String> = lines
@@ -539,7 +599,7 @@ fn long_heading_wraps_and_keeps_continuation_indent() {
 
 #[test]
 fn renders_ordered_list_with_bold_items() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     // 精确复现用户报告的场景：有序列表 + 粗体中文
     let md = "日报已成功写入。总结一下今天写入的 3 条技术日报：\n\n1. **编辑器中文宽字符鼠标点击定位修复** — 修复 char_idx_at_display_col\n2. **Chat UI 鼠标拖拽选区与复制** — 新增完整的鼠标选区功能\n3. **编辑器鼠标定位重构** — screen_to_logical 改用渲染行元数据映射";
 
@@ -578,7 +638,7 @@ fn renders_ordered_list_with_bold_items() {
 
 #[test]
 fn renders_list_with_bullet() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let md = "- item one\n- item two";
     let lines = markdown_to_lines(md, 80, &theme);
     let bullets: Vec<_> = lines
@@ -595,7 +655,7 @@ fn renders_list_with_bullet() {
 
 #[test]
 fn long_list_items_wrap_and_keep_continuation_indent() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let md = "1. **draw_tab_global_lines** 函数 - 渲染全局配置页面的所有字段";
     let max_width = 20;
     let lines = markdown_to_lines(md, max_width, &theme);
@@ -631,7 +691,7 @@ fn long_list_items_wrap_and_keep_continuation_indent() {
 
 #[test]
 fn handles_chinese_quotes_bold() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     // \u{201C} = " \u{201D} = "
     let md = "**\u{201C}中文引号内容\u{201D}**";
     let lines = markdown_to_lines(md, 80, &theme);
@@ -647,7 +707,7 @@ fn handles_chinese_quotes_bold() {
 
 #[test]
 fn renders_empty_input_returns_empty_or_wrapped() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let lines = markdown_to_lines("", 80, &theme);
     // 空输入不应 panic
     assert!(
@@ -663,7 +723,7 @@ fn renders_empty_input_returns_empty_or_wrapped() {
 /// 使用 `|---|` 单列分隔符格式。当整个内容被一次性解析时，表格应正确渲染。
 #[test]
 fn table_after_paragraph_with_single_col_separator() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
 
     // 模拟 AI 的完整回复内容
     let md = r##"渲染模块位于 `src/command/chat/render/cache/` 下，包含以下文件：
@@ -728,7 +788,7 @@ fn table_after_paragraph_with_single_col_separator() {
 /// 场景：find_stable_boundary 将内容切分后，tail 部分以 | 开头（表格开头）
 #[test]
 fn table_in_tail_after_stable_boundary_cut() {
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
 
     // 模拟 find_stable_boundary 切分后的 tail 内容
     // 在流式渲染中，boundary 在段落后的 \n\n 处，tail 以表格开头
@@ -771,7 +831,7 @@ fn nested_list_preserves_ordered_and_indentation() {
     //   3. 出现空的 "• " 幻影行
     //   4. 父项尾部内容（如 "字段"）被吞入并与子项拼接
     let md = "1. **路由未注册** - 文件: `router/router.go`\n   - Controllers 结构体中缺少 `SearchHistory *controller.SearchHistoryController` 字段\n   - private 路由组中缺少 4 条搜索历史路由\n\n2. **Wire 依赖注入未更新** - 文件: `cmd/server/wire.go`\n   - 缺少 `service.NewSearchHistoryService`\n";
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let lines = markdown_to_lines(md, 80, &theme);
     let rendered: Vec<String> = lines
         .iter()
@@ -829,7 +889,7 @@ fn nested_list_preserves_ordered_and_indentation() {
 fn deeply_nested_list_indentation() {
     // 深度 3 的列表应按 0 / 2 / 4 空格递增缩进
     let md = "- a\n  - b\n    - c\n";
-    let theme = Theme::from_name(&ThemeName::default());
+    let theme = test_theme();
     let lines = markdown_to_lines(md, 80, &theme);
     let rendered: Vec<String> = lines
         .iter()

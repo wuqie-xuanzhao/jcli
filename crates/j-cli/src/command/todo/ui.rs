@@ -4,6 +4,7 @@ use crate::tui::components::{
     CommandItem, CommandPopupConfig, ConfirmDialogConfig, StatusInputParams, cursor_wrapped_lines,
     draw_command_popup as render_command_popup, draw_confirm_dialog, draw_status_input,
 };
+use crate::tui::editor_core::EditorTheme;
 use crate::util::text::wrap_text;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
@@ -92,6 +93,7 @@ pub fn draw_ui(f: &mut ratatui::Frame, app: &mut TodoApp) {
 fn render_help(f: &mut ratatui::Frame, app: &TodoApp, area: ratatui::layout::Rect) {
     use crate::tui::components::{HelpPageConfig, HelpShortcut, draw_help_page};
 
+    let et = EditorTheme::from(&app.theme);
     let shortcuts = [
         HelpShortcut::new("  n / ↓ / j    ", "向下移动"),
         HelpShortcut::new("  N / ↑ / k    ", "向上移动"),
@@ -123,7 +125,7 @@ fn render_help(f: &mut ratatui::Frame, app: &TodoApp, area: ratatui::layout::Rec
             block_title: Some(" 帮助 "),
             shortcuts: &shortcuts,
             footer_lines: None,
-            theme: &app.theme,
+            theme: &et,
         },
     );
 }
@@ -320,9 +322,10 @@ fn build_editing_item(
     selected: bool,
     theme: &crate::theme::Theme,
 ) -> ListItem<'static> {
+    let et = EditorTheme::from(theme);
     let indent = " ".repeat(checkbox_w);
     let cursor_lines =
-        cursor_wrapped_lines(input, cursor_pos, content_width, Some("输入内容…"), theme);
+        cursor_wrapped_lines(input, cursor_pos, content_width, Some("输入内容…"), &et);
 
     let mut item_lines: Vec<Line> = Vec::new();
     for (i, line) in cursor_lines.lines.into_iter().enumerate() {
@@ -341,6 +344,7 @@ fn build_editing_item(
 
 /// 绘制命令面板弹窗（浮动在列表区上方）
 pub fn draw_command_popup(f: &mut ratatui::Frame, app: &mut TodoApp, main_area: Rect) {
+    let et = EditorTheme::from(&app.theme);
     let items = app.filtered_cmd_items();
     let cmd_items: Vec<CommandItem<'_>> = items
         .iter()
@@ -361,13 +365,14 @@ pub fn draw_command_popup(f: &mut ratatui::Frame, app: &mut TodoApp, main_area: 
             items: cmd_items,
             selected: app.cmd_popup_selected,
             highlight_fg: None,
-            theme: &app.theme,
+            theme: &et,
         },
     );
 }
 
 /// 渲染状态栏
 fn render_status_bar(f: &mut ratatui::Frame, app: &TodoApp, area: ratatui::layout::Rect) {
+    let et = EditorTheme::from(&app.theme);
     match &app.mode {
         AppMode::Adding => {
             let status = Paragraph::new(Line::from(vec![
@@ -482,7 +487,7 @@ fn render_status_bar(f: &mut ratatui::Frame, app: &TodoApp, area: ratatui::layou
                     placeholder: "输入筛选…",
                     hint: "↑↓ 选择 | Enter 确认 | Esc 取消",
                 },
-                &app.theme,
+                &et,
             );
         }
         _ => {

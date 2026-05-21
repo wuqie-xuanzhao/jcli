@@ -1,5 +1,6 @@
 use crate::command::chat::app::ChatApp;
 use crate::tui::components::{ItemList, selectable_row};
+use crate::tui::editor_core::EditorTheme;
 use ratatui::{
     style::{Modifier, Style},
     text::{Line, Span},
@@ -46,6 +47,7 @@ pub(super) fn draw_tab_archive_header<'a>(lines: &mut Vec<Line<'a>>, app: &ChatA
 /// Archive tab 可滚动列表（归档列表）
 pub(super) fn draw_tab_archive_list<'a>(app: &ChatApp) -> ItemList<'a> {
     let t = &app.ui.theme;
+    let et = EditorTheme::from(t);
     let mut list = ItemList::new(t.bg_primary);
 
     for (i, archive) in app.ui.archives.iter().enumerate() {
@@ -53,7 +55,7 @@ pub(super) fn draw_tab_archive_list<'a>(app: &ChatApp) -> ItemList<'a> {
         let name_truncated: String = archive.name.chars().take(40).collect();
         let time_str = &archive.created_at;
         let secondary = format!("({} \u{6761}, {})", archive.messages.len(), time_str);
-        list.push(selectable_row(&name_truncated, &secondary, is_selected, t));
+        list.push(selectable_row(&name_truncated, &secondary, is_selected, &et));
     }
     list
 }

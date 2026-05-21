@@ -2,7 +2,7 @@
 //!
 //! 提供单行和多行折行光标渲染功能。
 
-use crate::theme::Theme;
+use crate::editor_core::EditorTheme;
 use crate::util::text::wrap_text;
 use ratatui::{
     style::Style,
@@ -10,7 +10,7 @@ use ratatui::{
 };
 
 /// 构建带行内光标的 span 列表（单行）
-pub fn cursor_spans<'a>(value: &str, cursor: usize, style: Style, theme: &Theme) -> Vec<Span<'a>> {
+pub fn cursor_spans<'a>(value: &str, cursor: usize, style: Style, theme: &EditorTheme) -> Vec<Span<'a>> {
     let chars: Vec<char> = value.chars().collect();
     let before: String = chars[..cursor.min(chars.len())].iter().collect();
     let cursor_ch = if cursor < chars.len() {
@@ -59,7 +59,7 @@ pub fn cursor_wrapped_lines(
     cursor_pos: usize,
     width: usize,
     placeholder: Option<&str>,
-    theme: &Theme,
+    theme: &EditorTheme,
 ) -> WrappedCursorLines {
     let cursor_style = Style::default().fg(theme.cursor_fg).bg(theme.cursor_bg);
     let text_style = Style::default().fg(theme.text_normal);

@@ -2,7 +2,7 @@
 //!
 //! 提供统一的状态栏输入框渲染，用于 todo / notebook 等模块。
 
-use crate::theme::Theme;
+use crate::editor_core::EditorTheme;
 use ratatui::{
     Frame,
     layout::Rect,
@@ -31,7 +31,7 @@ pub struct StatusInputParams<'a> {
 ///
 /// 渲染一个带边框的单行输入框，标签在左侧，输入文本在中间，提示在右侧。
 /// 同时设置终端光标位置以支持光标闪烁。
-pub fn draw_status_input(f: &mut Frame, area: Rect, params: &StatusInputParams<'_>, theme: &Theme) {
+pub fn draw_status_input(f: &mut Frame, area: Rect, params: &StatusInputParams<'_>, theme: &EditorTheme) {
     let cursor_style = Style::default().fg(theme.cursor_fg).bg(theme.cursor_bg);
     let text_style = Style::default().fg(theme.text_normal);
     let placeholder_style = Style::default().fg(theme.text_dim);

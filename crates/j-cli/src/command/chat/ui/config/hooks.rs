@@ -1,5 +1,6 @@
 use crate::command::chat::app::ChatApp;
 use crate::tui::components::{ItemList, ToggleListItemCtx, toggle_list_item};
+use crate::tui::editor_core::EditorTheme;
 use crate::util::text::{char_width, display_width};
 use ratatui::{
     style::{Modifier, Style},
@@ -61,6 +62,7 @@ pub(super) fn draw_tab_hooks_header<'a>(lines: &mut Vec<Line<'a>>, app: &ChatApp
 /// Hooks tab 可滚动列表
 pub(super) fn draw_tab_hooks_list<'a>(app: &ChatApp) -> ItemList<'a> {
     let t = &app.ui.theme;
+    let et = EditorTheme::from(t);
     let hooks: Vec<_> = if let Ok(manager) = app.hook_manager.lock() {
         manager.list_hooks()
     } else {
@@ -120,7 +122,7 @@ pub(super) fn draw_tab_hooks_list<'a>(app: &ChatApp) -> ItemList<'a> {
             selected: is_selected,
             desc: None,
             tag: None,
-            theme: t,
+            theme: &et,
         }));
     }
 

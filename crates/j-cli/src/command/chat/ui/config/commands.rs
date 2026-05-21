@@ -1,6 +1,7 @@
 use crate::command::chat::app::{ChatApp, CommandsMode};
 use crate::command::chat::infra::command;
 use crate::tui::components::{ItemList, TOGGLE_OFF, TOGGLE_ON, pointer_span};
+use crate::tui::editor_core::EditorTheme;
 use ratatui::{
     style::{Modifier, Style},
     text::{Line, Span},
@@ -134,6 +135,7 @@ fn draw_select_source_ui<'a>(lines: &mut Vec<Line<'a>>, app: &ChatApp) {
 /// Commands tab 可滚动列表（每个命令：名称行 + 描述折行）
 pub(super) fn draw_tab_commands_list<'a>(app: &ChatApp, max_width: usize) -> ItemList<'a> {
     let t = &app.ui.theme;
+    let et = EditorTheme::from(t);
     let mut list = ItemList::new(t.bg_primary);
 
     for (i, cmd) in app.state.loaded_commands.iter().enumerate() {
@@ -164,7 +166,7 @@ pub(super) fn draw_tab_commands_list<'a>(app: &ChatApp, max_width: usize) -> Ite
         };
 
         let mut name_spans = vec![
-            pointer_span(is_selected, t),
+            pointer_span(is_selected, &et),
             Span::styled(toggle_text, toggle_style),
             Span::styled(" ", Style::default()),
             Span::styled(name.clone(), name_style),

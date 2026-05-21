@@ -7,8 +7,8 @@ use ratatui::{
 
 use crate::util::text::display_width;
 
-use crate::tui::editor_core::search::SearchState;
-use crate::tui::editor_core::wrap_engine::VisualLine;
+use crate::editor_core::search::SearchState;
+use crate::editor_core::wrap_engine::VisualLine;
 
 use super::MarkdownRenderer;
 

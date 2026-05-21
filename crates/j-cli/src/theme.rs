@@ -803,3 +803,67 @@ impl Theme {
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// MdStyle trait 实现：让 Theme 可直接用于 j-tui 的 Markdown 渲染
+// ---------------------------------------------------------------------------
+
+impl j_tui::markdown::theme::MdStyle for Theme {
+    fn text_normal(&self) -> Color {
+        self.text_normal
+    }
+    fn text_bold(&self) -> Color {
+        self.text_bold
+    }
+    fn text_dim(&self) -> Color {
+        self.text_dim
+    }
+    fn md_h1(&self) -> Color {
+        self.md_h1
+    }
+    fn md_h2(&self) -> Color {
+        self.md_h2
+    }
+    fn md_h3(&self) -> Color {
+        self.md_h3
+    }
+    fn md_h4(&self) -> Color {
+        self.md_h4
+    }
+    fn md_heading_sep(&self) -> Color {
+        self.md_heading_sep
+    }
+    fn md_link(&self) -> Color {
+        self.md_link
+    }
+    fn md_inline_code_fg(&self) -> Color {
+        self.md_inline_code_fg
+    }
+    fn bg_primary(&self) -> Color {
+        self.bg_primary
+    }
+    fn md_blockquote_bar(&self) -> Color {
+        self.md_blockquote_bar
+    }
+    fn md_blockquote_bg(&self) -> Color {
+        self.md_blockquote_bg
+    }
+    fn md_blockquote_text(&self) -> Color {
+        self.md_blockquote_text
+    }
+    fn md_list_bullet(&self) -> Color {
+        self.md_list_bullet
+    }
+    fn md_rule(&self) -> Color {
+        self.md_rule
+    }
+    fn table_header(&self) -> Color {
+        self.table_header
+    }
+    fn table_body(&self) -> Color {
+        self.table_body
+    }
+    fn code_syntax_theme(&self) -> j_tui::editor_core::EditorTheme {
+        j_tui::editor_core::EditorTheme::from(self)
+    }
+}

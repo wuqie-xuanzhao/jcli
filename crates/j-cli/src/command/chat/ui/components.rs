@@ -7,6 +7,7 @@ use crate::tui::components::{
     LABEL_WIDTH, TOGGLE_OFF, TOGGLE_ON, cursor_spans, desc_span, label_span, pointer_span,
     value_style,
 };
+use crate::tui::editor_core::EditorTheme;
 use crate::util::text::display_width;
 use ratatui::{
     style::{Modifier, Style},
@@ -81,14 +82,15 @@ pub(crate) fn secret_field_row<'a>(
 ) -> Line<'a> {
     let selected = ctx.selected;
     let theme = ctx.theme;
+    let et = EditorTheme::from(theme);
     if editing && selected {
-        let vs = value_style(selected, editing, theme);
+        let vs = value_style(selected, editing, &et);
         let mut spans = vec![
-            pointer_span(selected, theme),
-            label_span(label, LABEL_WIDTH, selected, theme),
+            pointer_span(selected, &et),
+            label_span(label, LABEL_WIDTH, selected, &et),
             Span::styled("  ", Style::default()),
         ];
-        spans.extend(cursor_spans(value, cursor, vs, theme));
+        spans.extend(cursor_spans(value, cursor, vs, &et));
         Line::from(spans)
     } else {
         let vs = if selected {
@@ -97,8 +99,8 @@ pub(crate) fn secret_field_row<'a>(
             Style::default().fg(theme.config_api_key)
         };
         Line::from(vec![
-            pointer_span(selected, theme),
-            label_span(label, LABEL_WIDTH, selected, theme),
+            pointer_span(selected, &et),
+            label_span(label, LABEL_WIDTH, selected, &et),
             Span::styled("  ", Style::default()),
             Span::styled(
                 if value.is_empty() {
@@ -123,14 +125,15 @@ pub(crate) fn global_text_row<'a>(
 ) -> Line<'a> {
     let selected = ctx.selected;
     let theme = ctx.theme;
-    let vs = value_style(selected, editing, theme);
+    let et = EditorTheme::from(theme);
+    let vs = value_style(selected, editing, &et);
     if editing && selected {
         let mut spans = vec![
-            pointer_span(selected, theme),
-            label_span(&ctx.label, LABEL_WIDTH, selected, theme),
+            pointer_span(selected, &et),
+            label_span(&ctx.label, LABEL_WIDTH, selected, &et),
             Span::styled("  ", Style::default()),
         ];
-        spans.extend(cursor_spans(value, cursor, vs, theme));
+        spans.extend(cursor_spans(value, cursor, vs, &et));
         Line::from(spans)
     } else {
         let display_value = if value.is_empty() {
@@ -139,11 +142,11 @@ pub(crate) fn global_text_row<'a>(
             value.to_string()
         };
         Line::from(vec![
-            pointer_span(selected, theme),
-            label_span(&ctx.label, LABEL_WIDTH, selected, theme),
+            pointer_span(selected, &et),
+            label_span(&ctx.label, LABEL_WIDTH, selected, &et),
             Span::styled("  ", Style::default()),
             Span::styled(display_value, vs),
-            desc_span(&ctx.desc, 30, theme),
+            desc_span(&ctx.desc, 30, &et),
         ])
     }
 }
@@ -152,6 +155,7 @@ pub(crate) fn global_text_row<'a>(
 pub(crate) fn global_toggle_row<'a>(is_on: bool, ctx: &GlobalRowCtx<'_>) -> Line<'a> {
     let selected = ctx.selected;
     let theme = ctx.theme;
+    let et = EditorTheme::from(theme);
     let toggle_style = if is_on {
         Style::default()
             .fg(theme.config_toggle_on)
@@ -165,11 +169,11 @@ pub(crate) fn global_toggle_row<'a>(is_on: bool, ctx: &GlobalRowCtx<'_>) -> Line
         format!("{TOGGLE_OFF} \u{5173}\u{95ed}")
     };
     Line::from(vec![
-        pointer_span(selected, theme),
-        label_span(&ctx.label, LABEL_WIDTH, selected, theme),
+        pointer_span(selected, &et),
+        label_span(&ctx.label, LABEL_WIDTH, selected, &et),
         Span::styled("  ", Style::default()),
         Span::styled(toggle_text, toggle_style),
-        desc_span(&ctx.desc, 30, theme),
+        desc_span(&ctx.desc, 30, &et),
         Span::styled(
             if selected {
                 format!("  ({})", ctx.hint)
@@ -185,13 +189,14 @@ pub(crate) fn global_toggle_row<'a>(is_on: bool, ctx: &GlobalRowCtx<'_>) -> Line
 pub fn global_preview_row<'a>(raw: &str, ctx: &GlobalRowCtx<'_>) -> Line<'a> {
     let selected = ctx.selected;
     let theme = ctx.theme;
-    let vs = value_style(selected, false, theme);
+    let et = EditorTheme::from(theme);
+    let vs = value_style(selected, false, &et);
     Line::from(vec![
-        pointer_span(selected, theme),
-        label_span(&ctx.label, LABEL_WIDTH, selected, theme),
+        pointer_span(selected, &et),
+        label_span(&ctx.label, LABEL_WIDTH, selected, &et),
         Span::styled("  ", Style::default()),
         Span::styled(render_preview_value(raw), vs),
-        desc_span(&ctx.desc, 30, theme),
+        desc_span(&ctx.desc, 30, &et),
         Span::styled(
             if selected {
                 format!("  ({})", ctx.hint)
@@ -207,9 +212,10 @@ pub fn global_preview_row<'a>(raw: &str, ctx: &GlobalRowCtx<'_>) -> Line<'a> {
 pub fn global_theme_row<'a>(name: &str, ctx: &GlobalRowCtx<'_>) -> Line<'a> {
     let selected = ctx.selected;
     let theme = ctx.theme;
+    let et = EditorTheme::from(theme);
     Line::from(vec![
-        pointer_span(selected, theme),
-        label_span(&ctx.label, LABEL_WIDTH, selected, theme),
+        pointer_span(selected, &et),
+        label_span(&ctx.label, LABEL_WIDTH, selected, &et),
         Span::styled("  ", Style::default()),
         Span::styled(
             format!("\u{1f3a8} {name}"),
@@ -217,7 +223,7 @@ pub fn global_theme_row<'a>(name: &str, ctx: &GlobalRowCtx<'_>) -> Line<'a> {
                 .fg(theme.config_toggle_on)
                 .add_modifier(Modifier::BOLD),
         ),
-        desc_span(&ctx.desc, 30, theme),
+        desc_span(&ctx.desc, 30, &et),
         Span::styled(
             if selected {
                 format!("  ({})", ctx.hint)

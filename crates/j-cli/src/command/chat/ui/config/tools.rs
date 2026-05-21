@@ -1,5 +1,6 @@
 use crate::command::chat::app::ChatApp;
 use crate::tui::components::{ItemList, TOGGLE_OFF, TOGGLE_ON, pointer_span};
+use crate::tui::editor_core::EditorTheme;
 use ratatui::{
     style::{Modifier, Style},
     text::{Line, Span},
@@ -51,6 +52,7 @@ pub(super) fn draw_tab_tools_header<'a>(lines: &mut Vec<Line<'a>>, app: &ChatApp
 /// 选项详情在右侧面板渲染。
 pub(super) fn draw_tab_tools_list<'a>(app: &ChatApp) -> ItemList<'a> {
     let t = &app.ui.theme;
+    let et = EditorTheme::from(t);
     let tool_names = app.tool_registry.tool_names();
     let mut list = ItemList::new(t.bg_primary);
 
@@ -92,7 +94,7 @@ pub(super) fn draw_tab_tools_list<'a>(app: &ChatApp) -> ItemList<'a> {
         };
 
         let mut spans = vec![
-            pointer_span(is_selected, t),
+            pointer_span(is_selected, &et),
             Span::styled(name.to_string(), name_style),
         ];
 
@@ -126,6 +128,7 @@ pub(super) fn draw_tab_tools_list<'a>(app: &ChatApp) -> ItemList<'a> {
 /// `tools_in_options` 控制焦点指示器，`tools_option_idx` 控制哪个选项高亮。
 pub(super) fn draw_tab_tools_detail<'a>(app: &ChatApp) -> Vec<Line<'a>> {
     let t = &app.ui.theme;
+    let et = EditorTheme::from(t);
     let tool_names = app.tool_registry.tool_names();
     let mut lines = Vec::new();
 
@@ -187,7 +190,7 @@ pub(super) fn draw_tab_tools_detail<'a>(app: &ChatApp) -> Vec<Line<'a>> {
         Span::styled(TOGGLE_OFF.to_string(), opt_off_style(enable_focused))
     };
     lines.push(Line::from(vec![
-        pointer_span(enable_focused, t),
+        pointer_span(enable_focused, &et),
         Span::styled(
             "启用 ",
             if enable_focused {
@@ -214,7 +217,7 @@ pub(super) fn draw_tab_tools_detail<'a>(app: &ChatApp) -> Vec<Line<'a>> {
         Span::styled(TOGGLE_OFF.to_string(), Style::default().fg(t.config_dim))
     };
     let mut defer_spans = vec![
-        pointer_span(defer_focused, t),
+        pointer_span(defer_focused, &et),
         Span::styled(
             "defer ",
             if defer_focused {

@@ -4,6 +4,7 @@ use crate::theme::ThemeName;
 use crate::tui::components::{
     CommandItem, CommandPopupConfig, draw_command_popup as render_command_popup,
 };
+use crate::tui::editor_core::EditorTheme;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
@@ -324,6 +325,7 @@ fn render_help_bar(f: &mut ratatui::Frame, app: &HelpApp, area: Rect) {
 
 /// 绘制命令面板弹窗
 fn draw_command_popup(f: &mut ratatui::Frame, app: &HelpApp, main_area: Rect) {
+    let et = EditorTheme::from(app.theme());
     let items = app.filtered_cmd_items();
     let cmd_items: Vec<CommandItem<'_>> = items
         .iter()
@@ -344,7 +346,7 @@ fn draw_command_popup(f: &mut ratatui::Frame, app: &HelpApp, main_area: Rect) {
             items: cmd_items,
             selected: app.cmd_popup_selected,
             highlight_fg: Some(Color::Black),
-            theme: app.theme(),
+            theme: &et,
         },
     );
 }

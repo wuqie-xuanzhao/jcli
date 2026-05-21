@@ -1,0 +1,30 @@
+[package]
+name = "j-tui"
+version = "12.10.69"
+edition = "2024"
+rust-version = "1.93.1"
+description = "Terminal UI components, Markdown editor core, and terminal Markdown renderer"
+license = "MIT"
+repository = "https://github.com/LingoJack/jcli"
+
+[lib]
+name = "j_tui"
+path = "src/lib.rs"
+
+[dependencies]
+ratatui = "0.29.0"
+crossterm = "0.28.0"
+pulldown-cmark = "0.13.0"
+unicode-width = "0.2"
+thiserror = "2"
+regex = "1.12.3"
+arboard = "3"
+
+# Optional image support
+ratatui-image = { version = "8.0.2", optional = true }
+image = { version = "0.25", optional = true }
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "gzip", "brotli", "deflate", "stream"], optional = true }
+
+[features]
+default = []
+image = ["dep:ratatui-image", "dep:image", "dep:reqwest"]

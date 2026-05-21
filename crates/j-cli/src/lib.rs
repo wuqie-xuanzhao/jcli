@@ -5,10 +5,12 @@ pub mod cli;
 pub mod command;
 pub mod config;
 pub mod constants;
-pub mod markdown;
 pub mod theme;
 pub mod tui;
 pub mod util;
+
+// Re-export j-tui modules for backward compatibility
+pub use j_tui::markdown;
 
 // CLI 专用模块不在 lib 中暴露：
 // - interactive (REPL)

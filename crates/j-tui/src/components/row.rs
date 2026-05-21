@@ -1,6 +1,6 @@
 //! 行组件（toggle_row / text_field_row / selectable_row / toggle_list_item）
 
-use crate::theme::Theme;
+use crate::editor_core::EditorTheme;
 use ratatui::{
     style::{Modifier, Style},
     text::{Line, Span},
@@ -18,7 +18,7 @@ pub struct ToggleRowCtx<'a> {
     pub is_on: bool,
     pub selected: bool,
     pub hint: String,
-    pub theme: &'a Theme,
+    pub theme: &'a EditorTheme,
 }
 
 /// 开关字段行（auto_restore_session 等）
@@ -59,7 +59,7 @@ pub struct TextFieldRowCtx<'a> {
     pub selected: bool,
     pub editing: bool,
     pub cursor: usize,
-    pub theme: &'a Theme,
+    pub theme: &'a EditorTheme,
 }
 
 /// 普通可编辑文本字段行
@@ -95,7 +95,7 @@ pub fn selectable_row<'a>(
     primary: &str,
     secondary: &str,
     selected: bool,
-    theme: &Theme,
+    theme: &EditorTheme,
 ) -> Line<'a> {
     let name_style = if selected {
         Style::default()
@@ -122,7 +122,7 @@ pub struct ToggleListItemCtx<'a> {
     pub selected: bool,
     pub desc: Option<String>,
     pub tag: Option<String>,
-    pub theme: &'a Theme,
+    pub theme: &'a EditorTheme,
 }
 
 /// 工具/技能/命令的开关列表项

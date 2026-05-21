@@ -1,5 +1,6 @@
 use crate::command::chat::app::ChatApp;
 use crate::tui::components::{ItemList, TOGGLE_OFF, TOGGLE_ON, pointer_span};
+use crate::tui::editor_core::EditorTheme;
 use ratatui::{
     style::{Modifier, Style},
     text::{Line, Span},
@@ -41,6 +42,7 @@ pub(super) fn draw_tab_skills_header<'a>(lines: &mut Vec<Line<'a>>, app: &ChatAp
 /// Skills tab 可滚动列表（每个技能：名称行 + 描述折行）
 pub(super) fn draw_tab_skills_list<'a>(app: &ChatApp, max_width: usize) -> ItemList<'a> {
     let t = &app.ui.theme;
+    let et = EditorTheme::from(t);
     let mut list = ItemList::new(t.bg_primary);
 
     for (i, skill) in app.state.loaded_skills.iter().enumerate() {
@@ -71,7 +73,7 @@ pub(super) fn draw_tab_skills_list<'a>(app: &ChatApp, max_width: usize) -> ItemL
         };
 
         let mut name_spans = vec![
-            pointer_span(is_selected, t),
+            pointer_span(is_selected, &et),
             Span::styled(toggle_text, toggle_style),
             Span::styled(" ", Style::default()),
             Span::styled(name.clone(), name_style),

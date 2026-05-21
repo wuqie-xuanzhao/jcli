@@ -22,6 +22,7 @@ path = "src/main.rs"
 
 [dependencies]
 j-agent = { version = "12.10.69", path = "../j-agent" }
+j-tui = { path = "../j-tui", features = ["image"] }
 clap = { version = "4", features = ["derive"] }
 rust-embed = { version = "8", features = ["include-exclude"] }
 rustyline = "17.0.2"
