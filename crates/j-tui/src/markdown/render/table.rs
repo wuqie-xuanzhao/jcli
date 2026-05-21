@@ -9,7 +9,7 @@ use super::inline::inline_display_width;
 /// 渲染表格
 pub fn render_table(
     data: &TableData,
-    alignments: &[pulldown_cmark::Alignment],
+    alignments: &[j_md::Alignment],
     content_width: usize,
     theme: &dyn MdStyle,
 ) -> Vec<Line<'static>> {
@@ -160,13 +160,13 @@ pub fn render_table(
                 let align = alignments
                     .get(i)
                     .copied()
-                    .unwrap_or(pulldown_cmark::Alignment::None);
+                    .unwrap_or(j_md::Alignment::None);
                 let (left_pad, right_pad) = match align {
-                    pulldown_cmark::Alignment::Center => {
+                    j_md::Alignment::Center => {
                         let left = fill / 2;
                         (left, fill - left)
                     }
-                    pulldown_cmark::Alignment::Right => (fill, 0),
+                    j_md::Alignment::Right => (fill, 0),
                     _ => (0, fill),
                 };
                 row_spans.push(Span::styled(

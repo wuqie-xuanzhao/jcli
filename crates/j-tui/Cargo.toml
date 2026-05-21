@@ -12,6 +12,7 @@ name = "j_tui"
 path = "src/lib.rs"
 
 [dependencies]
+j-md = { path = "../j-md" }
 ratatui = "0.29.0"
 crossterm = "0.28.0"
 pulldown-cmark = "0.13.0"

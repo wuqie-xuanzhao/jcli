@@ -1,19 +1,15 @@
 mod table;
-#[cfg(test)]
-mod tests;
-mod text;
 
-use crate::markdown::ir::{
-    Block, BlockKind, Inline, ListData, ListItem, ParsedDocument, SourceRange, TableData,
+use crate::ir::{
+    Alignment, Block, BlockKind, Inline, ListData, ListItem, ParsedDocument, SourceRange,
+    TableData,
 };
-use crate::util::text::{needs_terminal_sanitization, sanitize_terminal_text};
 use pulldown_cmark::{Event, Tag, TagEnd};
 
 // ---------------------------------------------------------------------------
 // ParseContext — IR accumulation state for the markdown event loop
 // ---------------------------------------------------------------------------
 
-/// Inline 容器类型，用于 inline 嵌套栈
 #[derive(Debug, Clone)]
 enum InlineContainer {
     Strong,
@@ -22,7 +18,6 @@ enum InlineContainer {
     Link { url: String },
 }
 
-/// 列表栈帧：记录一个 `Tag::List` 所需的状态
 #[derive(Debug)]
 struct ListFrame {
     ordered: bool,
@@ -30,7 +25,6 @@ struct ListFrame {
     items: Vec<ListItem>,
 }
 
-/// 列表项栈帧：记录一个 `Tag::Item` 所需的状态
 #[derive(Debug, Default)]
 struct ItemFrame {
     checked: Option<bool>,
@@ -38,50 +32,26 @@ struct ItemFrame {
     children: Vec<Block>,
 }
 
-/// 解析上下文：累积 IR 节点
 struct ParseContext {
-    /// 已解析的 block 列表
     blocks: Vec<Block>,
-
-    /// 当前 event 的源码范围（由 offset_iter 填充）
     current_source: SourceRange,
-
-    // --- Inline 累积 ---
-    /// 当前 block 级别的 inline 容器（paragraph / heading content / list item）
     current_inlines: Vec<Inline>,
-    /// 嵌套栈：记录当前 inline 容器类型
     inline_stack: Vec<InlineContainer>,
-    /// 嵌套子容器：每层开始一个新的 Vec<Inline>
     inline_children_stack: Vec<Vec<Inline>>,
-
-    // --- Code block ---
     in_code_block: bool,
     code_block_content: String,
     code_block_lang: String,
-
-    // --- List (栈式，支持嵌套) ---
-    /// 列表栈：每进入一个 `Tag::List` push 一帧，`End` 时 pop
     list_stack: Vec<ListFrame>,
-    /// 列表项栈：每进入一个 `Tag::Item` push 一帧，`End` 时 pop
     item_stack: Vec<ItemFrame>,
-
-    // --- Heading ---
     heading_level: Option<u8>,
-
-    // --- Block quote ---
     blockquote_stack: Vec<Vec<Block>>,
-
-    // --- Image ---
     image_url: Option<String>,
     image_alt: String,
-
-    // --- Table ---
     in_table: bool,
     table_rows: Vec<Vec<Vec<Inline>>>,
     current_row: Vec<Vec<Inline>>,
     current_cell_inlines: Vec<Inline>,
-    table_alignments: Vec<j_md::Alignment>,
-    /// 表格单元格内的 inline 栈
+    table_alignments: Vec<Alignment>,
     table_inline_stack: Vec<InlineContainer>,
     table_inline_children_stack: Vec<Vec<Inline>>,
 }
@@ -113,7 +83,6 @@ impl ParseContext {
         }
     }
 
-    /// 获取当前 inline 容器（可能在外层或 inline_children_stack 的最内层）
     fn current_inline_target(&mut self) -> &mut Vec<Inline> {
         if self.in_table {
             return self.table_inline_target();
@@ -121,14 +90,12 @@ impl ParseContext {
         if let Some(children) = self.inline_children_stack.last_mut() {
             return children;
         }
-        // 在列表项内：inline 直接追加到当前 item 的 content
         if let Some(item) = self.item_stack.last_mut() {
             return &mut item.content;
         }
         &mut self.current_inlines
     }
 
-    /// 表格内 inline 目标
     fn table_inline_target(&mut self) -> &mut Vec<Inline> {
         if let Some(children) = self.table_inline_children_stack.last_mut() {
             children
@@ -137,8 +104,6 @@ impl ParseContext {
         }
     }
 
-    /// 将当前 inline 容器 flush 为一个 block（Paragraph）。
-    /// 列表项内不 flush（item 的 inline 已直接写入 item.content）。
     fn flush_paragraph(&mut self) {
         if self.current_inlines.is_empty() {
             return;
@@ -154,8 +119,6 @@ impl ParseContext {
         self.push_block(block);
     }
 
-    /// Push block：优先级为 item_stack 顶 > blockquote_stack 顶 > blocks。
-    /// 列表项内产生的 block（如嵌套 List、CodeBlock）成为该 item 的 child。
     fn push_block(&mut self, block: Block) {
         if let Some(item) = self.item_stack.last_mut() {
             item.children.push(block);
@@ -168,17 +131,15 @@ impl ParseContext {
         }
     }
 
-    /// Push inline 到当前目标容器
     fn push_inline(&mut self, inline: Inline) {
         self.current_inline_target().push(inline);
     }
 }
 
 // ---------------------------------------------------------------------------
-// Table separator normalization (unchanged from previous implementation)
+// Table separator normalization
 // ---------------------------------------------------------------------------
 
-/// 检测 markdown 文本中是否存在列数不足的表格分隔行。
 fn needs_table_separator_fix(md: &str) -> bool {
     let lines: Vec<&str> = md.lines().collect();
     for i in 1..lines.len() {
@@ -195,7 +156,6 @@ fn needs_table_separator_fix(md: &str) -> bool {
     false
 }
 
-/// 补齐所有表格分隔行的列数，使其与对应的表头列数匹配。
 fn normalize_table_separators(md: &str) -> String {
     let lines: Vec<&str> = md.lines().collect();
     let mut result = String::with_capacity(md.len());
@@ -236,7 +196,6 @@ fn normalize_table_separators(md: &str) -> String {
     }
 }
 
-/// 判断一行是否是表格分隔行（仅含 `|`、`-`、`:`、空格）。
 fn is_separator_row(line: &str) -> bool {
     let trimmed = line.trim();
     if !trimmed.starts_with('|') {
@@ -249,7 +208,6 @@ fn is_separator_row(line: &str) -> bool {
             .all(|c| c == '-' || c == ':' || c == ' ' || c == '|')
 }
 
-/// 统计以 `|` 分隔的行的列数。
 fn count_pipe_cells(line: &str) -> usize {
     let trimmed = line.trim();
     if !trimmed.starts_with('|') {
@@ -268,7 +226,6 @@ fn count_pipe_cells(line: &str) -> usize {
 // Byte offset → line number mapping
 // ---------------------------------------------------------------------------
 
-/// 构建行起始字节偏移表
 fn build_line_offsets(text: &str) -> Vec<usize> {
     let mut offsets = Vec::with_capacity(64);
     offsets.push(0);
@@ -280,7 +237,6 @@ fn build_line_offsets(text: &str) -> Vec<usize> {
     offsets
 }
 
-/// 将字节偏移转换为行号（0-based）
 fn byte_to_line(byte: usize, line_offsets: &[usize]) -> usize {
     match line_offsets.binary_search(&(byte + 1)) {
         Ok(idx) => idx,
@@ -292,60 +248,30 @@ fn byte_to_line(byte: usize, line_offsets: &[usize]) -> usize {
 // pulldown_cmark::Alignment → j_md::Alignment
 // ---------------------------------------------------------------------------
 
-fn convert_alignment(a: pulldown_cmark::Alignment) -> j_md::Alignment {
+fn convert_alignment(a: pulldown_cmark::Alignment) -> Alignment {
     match a {
-        pulldown_cmark::Alignment::None => j_md::Alignment::None,
-        pulldown_cmark::Alignment::Left => j_md::Alignment::Left,
-        pulldown_cmark::Alignment::Center => j_md::Alignment::Center,
-        pulldown_cmark::Alignment::Right => j_md::Alignment::Right,
+        pulldown_cmark::Alignment::None => Alignment::None,
+        pulldown_cmark::Alignment::Left => Alignment::Left,
+        pulldown_cmark::Alignment::Center => Alignment::Center,
+        pulldown_cmark::Alignment::Right => Alignment::Right,
     }
 }
 
 // ---------------------------------------------------------------------------
-// Public API: parse_markdown (TUI facade — adds terminal sanitization)
+// Public API
 // ---------------------------------------------------------------------------
 
-/// 将 Markdown 文本解析为 IR 文档结构（TUI 版本，含终端字符清洗预处理）。
-pub fn parse_markdown(md: &str, max_width: usize) -> ParsedDocument {
-    // 预处理：ANSI/OSC/tab/carriage return/控制字符清洗
-    let normalized_md;
-    let md = if needs_terminal_sanitization(md) {
-        normalized_md = sanitize_terminal_text(md);
-        normalized_md.as_str()
-    } else {
-        md
-    };
-
-    // 预处理：中文引号与加粗标记的零宽空格
-    let mut md_owned;
-    let md = if md.contains("**\u{201C}")
-        || md.contains("**\u{2018}")
-        || md.contains("\u{201D}**")
-        || md.contains("\u{2019}**")
-    {
-        md_owned = md
-            .replace("**\u{201C}", "**\u{200B}\u{201C}")
-            .replace("**\u{2018}", "**\u{200B}\u{2018}")
-            .replace("\u{201D}**", "\u{201D}\u{200B}**")
-            .replace("\u{2019}**", "\u{2019}\u{200B}**");
-        &md_owned as &str
-    } else {
-        md
-    };
-
-    // 预处理：表格分隔行修复
-    let separator_fixed;
+/// 将 Markdown 文本解析为平台无关的 IR 文档结构。
+pub fn parse_markdown(md: &str) -> ParsedDocument {
+    // 预处理：表格分隔行修复（通用 GFM 兼容性）
+    let md_owned;
     let md = if needs_table_separator_fix(md) {
-        separator_fixed = normalize_table_separators(md);
-        md_owned = separator_fixed;
+        md_owned = normalize_table_separators(md);
         &md_owned as &str
     } else {
         md
     };
 
-    let _ = max_width;
-
-    // 构建行偏移表
     let line_offsets = build_line_offsets(md);
 
     let options = pulldown_cmark::Options::ENABLE_STRIKETHROUGH
@@ -605,7 +531,9 @@ pub fn parse_markdown(md: &str, max_width: usize) -> ParsedDocument {
                 ctx.image_alt.clear();
             }
             Event::End(TagEnd::Image) => {
-                if let Some(_url) = ctx.image_url.take() {}
+                if let Some(_url) = ctx.image_url.take() {
+                    // Image handling deferred to future step
+                }
                 ctx.image_alt.clear();
             }
 
@@ -666,75 +594,107 @@ impl ParseContext {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Public API: markdown_to_lines (Facade — unchanged signature)
-// ---------------------------------------------------------------------------
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ir::BlockKind;
 
-use crate::markdown::render::render_document_wrapped;
-use crate::markdown::theme::MdStyle;
-use ratatui::text::Line;
-
-/// 将 Markdown 文本渲染为 TUI 可显示的 `Line` 列表，应用主题着色和自动换行。
-pub fn markdown_to_lines(md: &str, max_width: usize, theme: &dyn MdStyle) -> Vec<Line<'static>> {
-    let content_width = max_width.saturating_sub(2);
-    let doc = parse_markdown(md, content_width);
-    render_document_wrapped(&doc, theme, content_width)
-}
-
-/// 从源码行切片中解析表格为 `TableData`。
-pub fn parse_table_from_source(table_lines: &[&str]) -> Option<TableData> {
-    use crate::markdown::ir::BlockKind;
-
-    let md: String = table_lines.to_vec().join("\n");
-    let doc = parse_markdown(&md, usize::MAX);
-
-    for block in &doc.blocks {
-        if let BlockKind::Table(data) = &block.kind {
-            return Some(data.clone());
+    #[test]
+    fn parse_heading() {
+        let doc = parse_markdown("# Hello");
+        assert_eq!(doc.blocks.len(), 1);
+        match &doc.blocks[0].kind {
+            BlockKind::Heading { level, content } => {
+                assert_eq!(*level, 1);
+                assert_eq!(content.len(), 1);
+            }
+            _ => panic!("expected heading"),
         }
     }
 
-    None
-}
-
-#[cfg(test)]
-mod bench_table {
-    use super::*;
+    #[test]
+    fn parse_code_block() {
+        let md = "```rust\nfn main() {}\n```";
+        let doc = parse_markdown(md);
+        assert_eq!(doc.blocks.len(), 1);
+        match &doc.blocks[0].kind {
+            BlockKind::CodeBlock { lang, code } => {
+                assert_eq!(lang, "rust");
+                assert!(code.contains("fn main()"));
+            }
+            _ => panic!("expected code block"),
+        }
+    }
 
     #[test]
-    fn bench_parse_table_from_source() {
-        let table_lines: &[&str] = &[
-            "| 功能 | 状态 | 备注 |",
-            "| --- | --- | --- |",
-            "| **内联语法** | ✓ | `code` 支持 |",
-            "| 表格渲染 | ✓ | 共享层 |",
-            "| 性能优化 | - | 待评估 |",
-        ];
-
-        let _ = parse_table_from_source(table_lines);
-
-        let iterations = 1000;
-        let start = std::time::Instant::now();
-        for _ in 0..iterations {
-            let _ = parse_table_from_source(table_lines);
+    fn parse_inline_formatting() {
+        let md = "text **bold** *italic* ~~strike~~ `code`";
+        let doc = parse_markdown(md);
+        assert_eq!(doc.blocks.len(), 1);
+        match &doc.blocks[0].kind {
+            BlockKind::Paragraph(inlines) => {
+                assert!(inlines.len() >= 7); // text + bold + text + italic + text + strike + text + code
+            }
+            _ => panic!("expected paragraph"),
         }
-        let elapsed = start.elapsed();
-        let per_call_us = elapsed.as_micros() as f64 / iterations as f64;
+    }
 
-        eprintln!(
-            "\n=== parse_table_from_source 性能 ===\n\
-             总调用: {} 次\n\
-             总耗时: {:.2} ms\n\
-             单次耗时: {:.1} μs",
-            iterations,
-            elapsed.as_millis(),
-            per_call_us,
-        );
+    #[test]
+    fn parse_table_with_alignment() {
+        let md = "| A | B |\n| ---: | :--- |\n| 1 | 2 |";
+        let doc = parse_markdown(md);
+        let table_block = doc
+            .blocks
+            .iter()
+            .find(|b| matches!(&b.kind, BlockKind::Table(_)));
+        assert!(table_block.is_some());
+        if let Some(Block {
+            kind: BlockKind::Table(data),
+            ..
+        }) = table_block
+        {
+            assert_eq!(data.alignments.len(), 2);
+            assert_eq!(data.alignments[0], Alignment::Right);
+            assert_eq!(data.alignments[1], Alignment::Left);
+            assert_eq!(data.rows.len(), 2); // header + data row
+        }
+    }
 
-        assert!(
-            per_call_us < 200.0,
-            "parse_table_from_source 单次耗时 {:.1}μs 超过 200μs 阈值",
-            per_call_us
-        );
+    #[test]
+    fn parse_list_nested() {
+        let md = "- item 1\n  - nested\n- item 2";
+        let doc = parse_markdown(md);
+        assert_eq!(doc.blocks.len(), 1);
+        match &doc.blocks[0].kind {
+            BlockKind::List(data) => {
+                assert_eq!(data.items.len(), 2);
+                assert_eq!(data.items[0].children.len(), 1);
+            }
+            _ => panic!("expected list"),
+        }
+    }
+
+    #[test]
+    fn parse_blockquote() {
+        let md = "> quoted text";
+        let doc = parse_markdown(md);
+        assert_eq!(doc.blocks.len(), 1);
+        match &doc.blocks[0].kind {
+            BlockKind::BlockQuote(blocks) => {
+                assert!(!blocks.is_empty());
+            }
+            _ => panic!("expected blockquote"),
+        }
+    }
+
+    #[test]
+    fn table_separator_fix() {
+        let md = "| A | B | C |\n| --- | --- |\n| 1 | 2 | 3 |";
+        let doc = parse_markdown(md);
+        let table_block = doc
+            .blocks
+            .iter()
+            .find(|b| matches!(&b.kind, BlockKind::Table(_)));
+        assert!(table_block.is_some());
     }
 }

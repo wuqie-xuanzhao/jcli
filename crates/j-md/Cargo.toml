@@ -1,0 +1,17 @@
+[package]
+name = "j-md"
+version = "12.10.69"
+edition = "2024"
+rust-version = "1.93.1"
+license = "MIT"
+repository = "https://github.com/LingoJack/jcli"
+description = "Shared Markdown IR and parser for j-tui and j-gui"
+
+[dependencies]
+pulldown-cmark = "0.13.0"
+unicode-width = "0.2"
+serde = { version = "1", features = ["derive"], optional = true }
+
+[features]
+default = []
+serde = ["dep:serde"]

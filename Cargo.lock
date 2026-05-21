@@ -3466,12 +3466,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "j-md"
+version = "12.10.69"
+dependencies = [
+ "pulldown-cmark",
+ "serde",
+ "unicode-width 0.2.0",
+]
+
+[[package]]
 name = "j-tui"
 version = "12.10.69"
 dependencies = [
  "arboard",
  "crossterm 0.28.1",
  "image",
+ "j-md",
  "pulldown-cmark",
  "ratatui",
  "ratatui-image",
