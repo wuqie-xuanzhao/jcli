@@ -1,6 +1,5 @@
 use crate::ir::{
-    Alignment, Block, BlockKind, Inline, ListData, ListItem, ParsedDocument, SourceRange,
-    TableData,
+    Alignment, Block, BlockKind, Inline, ListData, ListItem, ParsedDocument, SourceRange, TableData,
 };
 use pulldown_cmark::{Event, Tag, TagEnd};
 

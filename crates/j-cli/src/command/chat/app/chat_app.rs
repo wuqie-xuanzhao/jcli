@@ -1,3 +1,8 @@
+mod init_hooks;
+mod model_mgr;
+mod remote;
+mod remote_ops;
+mod tool_ops;
 mod update;
 mod update_config;
 mod update_misc;
@@ -10,33 +15,27 @@ use super::tool_executor::ToolExecutor;
 use super::types::AskRequest;
 use super::ui_state::{ChatMode, CommandsMode, ConfigTab, UIState};
 use crate::command::chat::agent_md;
-use crate::command::chat::constants::TODO_NAG_INTERVAL_ROUNDS;
-use crate::command::chat::context::message_compress::{
-    DEFAULT_OTHER_AGENT_TOOLCALL_THRESHOLD, compress_other_agent_toolcalls,
-};
 use crate::command::chat::infra::command::{self, CommandSource};
-use crate::command::chat::infra::hook::{HookContext, HookEvent, HookManager, HookResult};
+use crate::command::chat::infra::hook::{HookContext, HookEvent, HookManager};
 use crate::command::chat::infra::sandbox::Sandbox;
 use crate::command::chat::infra::skill;
 use crate::command::chat::input::file_index::FileIndex;
 use crate::command::chat::permission::JcliConfig;
 use crate::command::chat::permission::queue::PermissionQueue;
-use crate::command::chat::remote::protocol::WsOutbound;
-use crate::command::chat::storage::MessageRole;
 use crate::command::chat::storage::{
-    ChatMessage, DisplayHint, ModelProvider, load_agent_config, memory_path, save_agent_config,
-    save_memory, save_soul, save_system_prompt, soul_path, system_prompt_path,
+    ChatMessage, ModelProvider, load_agent_config, memory_path, save_memory, save_soul,
+    save_system_prompt, soul_path, system_prompt_path,
 };
 use crate::command::chat::teammate::TeammateManager;
 use crate::command::chat::tools::ToolRegistry;
-use crate::command::chat::tools::background::{BackgroundManager, build_running_summary};
+use crate::command::chat::tools::background::BackgroundManager;
 use crate::command::chat::tools::derived_shared::{
     AgentContextConfig, DerivedAgentShared, SubAgentTracker,
 };
 use crate::command::chat::tools::plan::PlanApprovalQueue;
-use crate::command::chat::tools::task::{TaskManager, build_tasks_summary};
+use crate::command::chat::tools::task::TaskManager;
 use crate::command::chat::tools::todo::TodoManager;
-use crate::constants::{CONFIG_FIELDS, TOAST_DURATION_SECS};
+use crate::constants::TOAST_DURATION_SECS;
 use crate::markdown::image_cache::ImageCache;
 use crate::theme::Theme;
 use crate::tui::editor_core::text_buffer::TextBuffer;
@@ -127,31 +126,6 @@ pub struct ChatApp {
     pub invoked_skills: crate::command::chat::context::compact::InvokedSkillsMap,
     /// 项目文件索引（后台维护，弹窗使用）
     pub file_index: FileIndex,
-}
-
-/// 所有字段数 = provider 字段 + 全局字段
-/// 根据当前 tab 计算字段总数
-pub fn config_tab_field_count(app: &ChatApp) -> usize {
-    use crate::constants::CONFIG_GLOBAL_FIELDS_TAB;
-    match app.ui.config_tab {
-        ConfigTab::Model => CONFIG_FIELDS.len(),
-        ConfigTab::Global => CONFIG_GLOBAL_FIELDS_TAB.len(),
-        ConfigTab::Tools => app.tool_registry.tool_names().len(),
-        ConfigTab::Skills => app.state.loaded_skills.len(),
-        ConfigTab::Commands => app.state.loaded_commands.len(),
-        ConfigTab::Hooks => app
-            .hook_manager
-            .lock()
-            .map(|m| m.list_hooks().len())
-            .unwrap_or(0),
-        ConfigTab::Session => app.ui.session_list.len(),
-        ConfigTab::Teammates => app
-            .teammate_manager
-            .lock()
-            .map(|m| m.teammates.len())
-            .unwrap_or(0),
-        ConfigTab::Archive => app.ui.archives.len(),
-    }
 }
 
 impl ChatApp {
@@ -326,168 +300,14 @@ impl ChatApp {
         let jcli_config = Arc::new(JcliConfig::load());
 
         // ── 注册内置 hook ──
-        // 将状态占位符替换和事件驱动提醒从硬编码逻辑迁移到 hook 系统，
-        // 统一通过 PreLlmRequest hook 链执行（内置→用户→项目→session）
-        if let Ok(mut manager) = hook_manager.lock() {
-            // 内置 hook 1: tasks_status — 替换 system_prompt 中的 {{.tasks}} 占位符
-            let tasks_tm = Arc::clone(&task_manager);
-            manager.register_builtin(HookEvent::PreLlmRequest, "tasks_status", move |ctx| {
-                let summary = build_tasks_summary(&tasks_tm);
-                if let Some(ref prompt) = ctx.system_prompt
-                    && prompt.contains("{{.tasks}}")
-                {
-                    return Some(HookResult {
-                        system_prompt: Some(prompt.replace("{{.tasks}}", &summary)),
-                        ..Default::default()
-                    });
-                }
-                None
-            });
-
-            // 内置 hook 2: background_status — 替换 {{.background_tasks}} 占位符 + 注入完成通知
-            let bg_mgr = Arc::clone(&background_manager);
-            manager.register_builtin(
-                HookEvent::PreLlmRequest,
-                "background_status",
-                move |ctx| {
-                    // ★ 先清理已死进程，确保状态准确
-                    bg_mgr.cleanup_dead_tasks();
-
-                    let running_summary =
-                        build_running_summary(&bg_mgr);
-                    let notifications = bg_mgr.drain_notifications();
-
-                    let mut result = HookResult::default();
-
-                    // 替换运行中任务占位符
-                    if let Some(ref prompt) = ctx.system_prompt
-                        && prompt.contains("{{.background_tasks}}")
-                    {
-                        result.system_prompt =
-                            Some(prompt.replace("{{.background_tasks}}", &running_summary));
-                    }
-
-                    // 注入完成通知为 inject_messages
-                    if !notifications.is_empty() {
-                        let mut inject = Vec::new();
-                        for notif in notifications {
-                            let body = format!(
-                                "<background_task_completed>\n<task_id>{}</task_id>\n<command>{}</command>\n<status>{}</status>\n<result>\n{}\n</result>\n</background_task_completed>",
-                                notif.task_id, notif.command, notif.status, notif.result
-                            );
-                            inject.push(ChatMessage {
-                                role: MessageRole::User,
-                                content: format!("<system-reminder>\n{}\n</system-reminder>", body),
-                                tool_calls: None,
-                                tool_call_id: None,
-                                images: None,
-                                reasoning_content: None,
-                                sender_name: None,
-                                recipient_name: None,
-                                display_hint: DisplayHint::Normal,
-                            });
-                        }
-                        result.inject_messages = Some(inject);
-                    }
-
-                    if result.system_prompt.is_some() || result.inject_messages.is_some() {
-                        Some(result)
-                    } else {
-                        None
-                    }
-                },
-            );
-
-            // 内置 hook 3: session_state — 替换 {{.session_state}} 占位符
-            let session_tr = Arc::clone(&tool_registry);
-            manager.register_builtin(HookEvent::PreLlmRequest, "session_state", move |ctx| {
-                let summary = session_tr.build_session_state_summary();
-                if let Some(ref prompt) = ctx.system_prompt
-                    && prompt.contains("{{.session_state}}")
-                {
-                    return Some(HookResult {
-                        system_prompt: Some(prompt.replace("{{.session_state}}", &summary)),
-                        ..Default::default()
-                    });
-                }
-                None
-            });
-
-            // 内置 hook 4: teammates_status — 替换 {{.teammates}} 占位符
-            let tm_mgr = Arc::clone(&teammate_manager);
-            manager.register_builtin(HookEvent::PreLlmRequest, "teammates_status", move |ctx| {
-                let summary = tm_mgr.lock().map(|m| m.team_summary()).unwrap_or_default();
-                if let Some(ref prompt) = ctx.system_prompt
-                    && prompt.contains("{{.teammates}}")
-                {
-                    return Some(HookResult {
-                        system_prompt: Some(prompt.replace("{{.teammates}}", &summary)),
-                        ..Default::default()
-                    });
-                }
-                None
-            });
-
-            // 内置 hook 5: todo_nag — 当 todo 列表活跃但长时间未更新时注入提醒
-            let todo_mgr = Arc::clone(&todo_manager);
-            manager.register_builtin(
-                HookEvent::PreLlmRequest,
-                "todo_nag",
-                move |_ctx| {
-                    if !todo_mgr.has_todos() {
-                        return None;
-                    }
-                    let turns = todo_mgr.turns_since_last_call();
-                    if turns < TODO_NAG_INTERVAL_ROUNDS {
-                        return None;
-                    }
-                    let todos_summary = todo_mgr.format_todos_summary();
-                    let body = format!(
-                        "<todo_reminder>\nYou have an active todo list but haven't updated it in 15+ rounds. Update it if progress has been made, or ignore this reminder if you are currently working on an item.\n<todos>\n{}\n</todos>\n</todo_reminder>",
-                        todos_summary
-                    );
-                    let inject = vec![ChatMessage {
-                        role: MessageRole::User,
-                        content: format!("<system-reminder>\n{}\n</system-reminder>", body),
-                        tool_calls: None,
-                        tool_call_id: None,
-                        images: None,
-                        reasoning_content: None,
-                        sender_name: None,
-                        recipient_name: None,
-                        display_hint: DisplayHint::Normal,
-                    }];
-                    Some(HookResult {
-                        inject_messages: Some(inject),
-                        ..Default::default()
-                    })
-                },
-            );
-
-            // 内置 hook 6: broadcast_compress — 折叠来自其他 agent 的 tool call 广播
-            //
-            // 注册在末位，确保它在所有其他 hook（含 inject_messages）之后执行，
-            // 这样即便有 hook 追加了 <Name> [调用工具 X] 格式的消息也能被折叠。
-            // self_agent_name 取自线程本地身份：Main 线程返回 "Main"，teammate 线程返回
-            // 其 teammate 名，SubAgent 线程返回 sub_id（SubAgent 的 messages 里几乎不会有
-            // 广播，折叠无副作用）。
-            manager.register_builtin(HookEvent::PreLlmRequest, "broadcast_compress", |ctx| {
-                let messages = ctx.messages.as_ref()?;
-                let self_name = crate::command::chat::agent::thread_identity::current_agent_name();
-                let compressed = compress_other_agent_toolcalls(
-                    messages,
-                    &self_name,
-                    DEFAULT_OTHER_AGENT_TOOLCALL_THRESHOLD,
-                );
-                if compressed.len() == messages.len() {
-                    return None;
-                }
-                Some(HookResult {
-                    messages: Some(compressed),
-                    ..Default::default()
-                })
-            });
-        }
+        init_hooks::register_builtin_hooks(
+            &hook_manager,
+            &task_manager,
+            &background_manager,
+            &tool_registry,
+            &teammate_manager,
+            &todo_manager,
+        );
 
         let new_app = Self {
             ui: UIState {
@@ -684,300 +504,6 @@ impl ChatApp {
         self.ui.toast = Some((msg.into(), is_error, std::time::Instant::now()));
     }
 
-    /// 广播 WebSocket 消息给远程客户端
-    pub fn broadcast_ws(&self, msg: WsOutbound) {
-        if let Some(ref ws) = self.ws_bridge {
-            ws.broadcast(msg);
-        }
-    }
-
-    /// 构建全量同步消息（复用于 Sync / SwitchSession / NewSession）
-    pub fn build_sync_outbound(&self) -> WsOutbound {
-        use crate::command::chat::remote::protocol::{SyncMessage, SyncToolCall};
-        let messages: Vec<SyncMessage> = safe_lock(&self.context_messages, "build_sync_outbound")
-            .iter()
-            .map(|m| SyncMessage {
-                role: m.role.to_string(),
-                content: m.content.clone(),
-                tool_calls: m.tool_calls.as_ref().map(|tc| {
-                    tc.iter()
-                        .map(|t| SyncToolCall {
-                            id: t.id.clone(),
-                            name: t.name.clone(),
-                            arguments: t.arguments.clone(),
-                        })
-                        .collect()
-                }),
-                tool_call_id: m.tool_call_id.clone(),
-            })
-            .collect();
-        let status = if self.state.is_loading {
-            "loading"
-        } else if self.ui.mode == ChatMode::ToolConfirm {
-            "tool_confirm"
-        } else {
-            "idle"
-        };
-        let model = self.active_model_name().to_string();
-        let context_tokens = *safe_lock(&self.context_tokens, "build_sync_outbound::ctx_tokens");
-        let message_count =
-            safe_lock(&self.context_messages, "build_sync_outbound::msg_count").len();
-        WsOutbound::SessionSync {
-            messages,
-            status: status.to_string(),
-            model,
-            context_tokens,
-            message_count,
-            auto_approve: self.ui.auto_approve,
-        }
-    }
-
-    /// 广播配置数据到远程客户端
-    pub fn broadcast_config_state(&mut self) {
-        use crate::command::chat::remote::protocol::{ConfigField, ModelInfo, ThemeInfo};
-
-        let tab = match self.ui.config_tab {
-            ConfigTab::Model => "model",
-            ConfigTab::Session => "session",
-            ConfigTab::Global => "global",
-            ConfigTab::Tools => "tools",
-            ConfigTab::Skills => "skills",
-            ConfigTab::Hooks => "hooks",
-            ConfigTab::Commands => "commands",
-            ConfigTab::Teammates => "teammates",
-            ConfigTab::Archive => "archive",
-        };
-
-        let fields = match self.ui.config_tab {
-            ConfigTab::Model => {
-                let mut fields = Vec::new();
-                for (i, p) in self.state.agent_config.providers.iter().enumerate() {
-                    let is_active = i == self.state.agent_config.active_index;
-                    fields.push(ConfigField {
-                        key: format!("provider_{}", i),
-                        label: p.name.clone(),
-                        value: format!("{} @ {}", p.model, p.api_base),
-                        field_type: "select".to_string(),
-                        editable: false,
-                        options: None,
-                    });
-                    if is_active {
-                        fields.push(ConfigField {
-                            key: "active_provider".into(),
-                            label: "当前模型".into(),
-                            value: p.name.clone(),
-                            field_type: "text".into(),
-                            editable: false,
-                            options: None,
-                        });
-                    }
-                }
-                // 也发送模型列表供快速切换
-                let models: Vec<ModelInfo> = self
-                    .state
-                    .agent_config
-                    .providers
-                    .iter()
-                    .map(|p| ModelInfo {
-                        name: p.name.clone(),
-                        model: p.model.clone(),
-                        provider: p.api_base.clone(),
-                        supports_vision: p.supports_vision,
-                    })
-                    .collect();
-                self.broadcast_ws(WsOutbound::ModelList {
-                    models,
-                    active_index: self.state.agent_config.active_index,
-                });
-                // 同时发送主题列表供远程快速切换
-                {
-                    use crate::theme::ThemeName;
-                    let all_themes = ThemeName::all();
-                    let themes: Vec<ThemeInfo> = all_themes
-                        .iter()
-                        .map(|t| ThemeInfo {
-                            name: t.to_str().to_string(),
-                            display_name: t.display_name().to_string(),
-                        })
-                        .collect();
-                    let active_idx = all_themes
-                        .iter()
-                        .position(|n| *n == self.state.agent_config.theme)
-                        .unwrap_or(0);
-                    self.broadcast_ws(WsOutbound::ThemeList {
-                        themes,
-                        active_index: active_idx,
-                    });
-                }
-                fields
-            }
-            ConfigTab::Global => {
-                let cfg = &self.state.agent_config;
-                vec![
-                    ConfigField {
-                        key: "max_history_messages".into(),
-                        label: "最大历史消息数".into(),
-                        value: cfg.max_history_messages.to_string(),
-                        field_type: "text".into(),
-                        editable: true,
-                        options: None,
-                    },
-                    ConfigField {
-                        key: "max_context_tokens".into(),
-                        label: "最大上下文 Token".into(),
-                        value: cfg.max_context_tokens.to_string(),
-                        field_type: "text".into(),
-                        editable: true,
-                        options: None,
-                    },
-                    ConfigField {
-                        key: "max_tool_rounds".into(),
-                        label: "最大工具轮数".into(),
-                        value: cfg.max_tool_rounds.to_string(),
-                        field_type: "text".into(),
-                        editable: true,
-                        options: None,
-                    },
-                    ConfigField {
-                        key: "tools_enabled".into(),
-                        label: "启用工具".into(),
-                        value: cfg.tools_enabled.to_string(),
-                        field_type: "bool".into(),
-                        editable: true,
-                        options: None,
-                    },
-                    ConfigField {
-                        key: "tool_confirm_timeout".into(),
-                        label: "工具确认超时(秒)".into(),
-                        value: cfg.tool_confirm_timeout.to_string(),
-                        field_type: "text".into(),
-                        editable: true,
-                        options: None,
-                    },
-                ]
-            }
-            ConfigTab::Tools => {
-                let all_tools: Vec<String> = self
-                    .tool_registry
-                    .tool_names()
-                    .into_iter()
-                    .map(|s| s.to_string())
-                    .collect();
-                let disabled = &self.state.agent_config.disabled_tools;
-                all_tools
-                    .into_iter()
-                    .map(|name| ConfigField {
-                        key: name.clone(),
-                        label: name.clone(),
-                        value: (!disabled.contains(&name)).to_string(),
-                        field_type: "bool".into(),
-                        editable: true,
-                        options: None,
-                    })
-                    .collect()
-            }
-            ConfigTab::Skills => {
-                let skills = &self.state.loaded_skills;
-                let disabled = &self.state.agent_config.disabled_skills;
-                skills
-                    .iter()
-                    .map(|s| {
-                        let name = s.frontmatter.name.clone();
-                        ConfigField {
-                            key: name.clone(),
-                            label: name.clone(),
-                            value: (!disabled.contains(&name)).to_string(),
-                            field_type: "bool".into(),
-                            editable: true,
-                            options: None,
-                        }
-                    })
-                    .collect()
-            }
-            ConfigTab::Session
-            | ConfigTab::Archive
-            | ConfigTab::Hooks
-            | ConfigTab::Commands
-            | ConfigTab::Teammates => vec![],
-        };
-
-        self.broadcast_ws(WsOutbound::ConfigData {
-            tab: tab.to_string(),
-            fields,
-        });
-    }
-
-    /// 广播归档确认状态到远程客户端
-    pub fn broadcast_archive_confirm_state(&self) {
-        // ArchiveConfirm 状态已通过 session_sync 的 status 字段表达
-        // 这里额外广播默认归档名
-        self.broadcast_ws(WsOutbound::Status {
-            state: "archive_confirm".to_string(),
-        });
-    }
-
-    /// 广播归档列表到远程客户端
-    pub fn broadcast_archive_list_state(&self) {
-        use crate::command::chat::remote::protocol::ArchiveInfo;
-        let archives: Vec<ArchiveInfo> = self
-            .ui
-            .archives
-            .iter()
-            .map(|a| ArchiveInfo {
-                name: a.name.clone(),
-                created_at: a.created_at.clone(),
-                message_count: a.messages.len(),
-            })
-            .collect();
-        self.broadcast_ws(WsOutbound::ArchiveList { archives });
-    }
-
-    /// 广播会话列表状态到远程客户端
-    pub fn broadcast_session_list_state(&self) {
-        let sessions = crate::command::chat::storage::list_sessions();
-        self.broadcast_ws(WsOutbound::SessionList { sessions });
-    }
-
-    /// 从远程客户端注入一条消息（模拟用户输入并发送）
-    /// 注意：不广播 user message 回去，发送方 Web 端已经本地显示了
-    ///
-    /// 如果当前正在 loading（agent loop 运行中），消息追加到待处理队列，
-    /// 与 TUI 本地模式下 Enter 的行为一致。
-    pub fn inject_remote_message(&mut self, content: &str) {
-        use crate::command::chat::infra::command;
-        use crate::command::chat::storage::{ChatMessage, MessageRole};
-
-        let text = content.trim().to_string();
-        if text.is_empty() {
-            return;
-        }
-
-        // 展开 @command:name 引用
-        let text = command::expand_command_mentions(
-            &text,
-            &self.state.loaded_commands,
-            &self.state.agent_config.disabled_commands,
-        );
-
-        if self.state.is_loading {
-            // agent loop 运行中：追加到 pending 队列 + 双通道，下一轮 loop 会处理
-            let user_msg = ChatMessage::text(MessageRole::User, &text);
-            self.push_both_channels(user_msg);
-            {
-                let mut pending = crate::util::safe_lock(
-                    &self.state.pending_user_messages,
-                    "inject_remote_message::pending",
-                );
-                pending.push(ChatMessage::text(MessageRole::User, &text));
-            }
-            self.ui.msg_lines_cache = None;
-            self.ui.auto_scroll = true;
-            self.ui.scroll_offset = usize::MAX;
-        } else {
-            self.send_message_internal(text);
-        }
-    }
-
     /// 清理过期的 toast
     pub fn tick_toast(&mut self) {
         if let Some((_, _, created)) = &self.ui.toast
@@ -985,57 +511,6 @@ impl ChatApp {
         {
             self.ui.toast = None;
         }
-    }
-
-    /// 获取当前活跃的 provider
-    pub fn active_provider(&self) -> Option<&ModelProvider> {
-        if self.state.agent_config.providers.is_empty() {
-            return None;
-        }
-        let idx = self
-            .state
-            .agent_config
-            .active_index
-            .min(self.state.agent_config.providers.len() - 1);
-        Some(&self.state.agent_config.providers[idx])
-    }
-
-    /// 获取当前模型名称
-    pub fn active_model_name(&self) -> String {
-        self.active_provider()
-            .map(|p| p.name.clone())
-            .unwrap_or_else(|| "未配置".to_string())
-    }
-
-    /// 仅取消工具执行，不取消整个流式请求
-    pub fn cancel_tools_only(&mut self) {
-        self.tool_executor.cancel();
-        self.tool_executor.tools_executing_count = 0;
-        self.tool_executor.active_tool_calls.clear();
-        self.tool_executor.pending_tool_execution = false;
-        self.show_toast("工具已取消", false);
-    }
-
-    /// 取消当前流式请求
-    ///
-    /// 立即执行 finish_loading() 清除加载状态，不等 agent 线程响应取消信号。
-    /// 同时停止所有 teammates，确保 Esc 按键后 UI 瞬间恢复可交互状态。
-    pub fn cancel_stream(&mut self) {
-        // 停止所有 teammates
-        if let Ok(mut mgr) = self.teammate_manager.lock() {
-            mgr.stop_all();
-        }
-        self.finish_loading(false, true);
-    }
-
-    pub fn switch_model(&mut self) {
-        if let Some(sel) = self.ui.model_list_state.selected() {
-            self.state.agent_config.active_index = sel;
-            let _ = save_agent_config(&self.state.agent_config);
-            let name = self.active_model_name();
-            self.show_toast(format!("已切换到: {}", name), false);
-        }
-        self.ui.mode = ChatMode::Chat;
     }
 
     /// 向上滚动消息
@@ -1047,119 +522,6 @@ impl ChatApp {
     /// 向下滚动消息
     pub fn scroll_down(&mut self) {
         self.ui.scroll_offset = self.ui.scroll_offset.saturating_add(3);
-    }
-    // ========== 兼容方法（保持现有 handler 可编译，后续 Step 5 逐步替换为 Action）==========
-
-    /// 执行当前待处理工具（兼容旧接口）
-    pub fn execute_pending_tool(&mut self) {
-        if let Some(new_mode) = self.tool_executor.execute_current(&self.tool_registry) {
-            self.ui.mode = new_mode;
-        } else {
-            self.reset_tool_confirm_interact_state();
-        }
-    }
-
-    /// 拒绝当前待处理工具（兼容旧接口）
-    pub fn reject_pending_tool(&mut self, reason: &str) {
-        if let Some(new_mode) = self.tool_executor.reject_current(reason) {
-            self.ui.mode = new_mode;
-        } else {
-            self.reset_tool_confirm_interact_state();
-        }
-    }
-
-    /// 允许并执行当前待处理工具（兼容旧接口）
-    pub fn allow_and_execute_pending_tool(&mut self) {
-        if let Some(new_mode) = self
-            .tool_executor
-            .allow_and_execute(&self.tool_registry, &mut self.jcli_config)
-        {
-            self.ui.mode = new_mode;
-        } else {
-            self.reset_tool_confirm_interact_state();
-        }
-    }
-
-    fn reset_tool_confirm_interact_state(&mut self) {
-        self.ui.tool_interact_selected = 0;
-        self.ui.tool_interact_typing = false;
-        self.ui.tool_interact_input.clear();
-        self.ui.tool_interact_cursor = 0;
-    }
-
-    // ── 远程文件/终端操作（静态方法） ──
-
-    pub fn handle_file_list(path: &str) -> Vec<crate::command::chat::remote::protocol::FileEntry> {
-        let dir = if path.is_empty() { "." } else { path };
-        let mut entries = Vec::new();
-        if let Ok(read_dir) = std::fs::read_dir(dir) {
-            let mut dirs: Vec<_> = read_dir.filter_map(|e| e.ok()).collect();
-            dirs.sort_by(|a, b| {
-                let a_dir = a.file_type().map(|t| !t.is_dir()).unwrap_or(true);
-                let b_dir = b.file_type().map(|t| !t.is_dir()).unwrap_or(true);
-                b_dir
-                    .cmp(&a_dir)
-                    .then_with(|| a.file_name().cmp(&b.file_name()))
-            });
-            for entry in dirs {
-                let name = entry.file_name().to_string_lossy().to_string();
-                if name.starts_with('.') {
-                    continue;
-                }
-                let is_dir = entry.file_type().map(|t| t.is_dir()).unwrap_or(false);
-                let size = entry.metadata().map(|m| m.len()).unwrap_or(0);
-                let modified = entry
-                    .metadata()
-                    .ok()
-                    .and_then(|m| m.modified().ok())
-                    .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                    .map(|d| d.as_secs().to_string())
-                    .unwrap_or_default();
-                entries.push(crate::command::chat::remote::protocol::FileEntry {
-                    name,
-                    is_dir,
-                    size,
-                    modified,
-                });
-            }
-        }
-        entries
-    }
-
-    pub fn handle_file_read(path: &str) -> (String, Option<String>) {
-        match std::fs::read_to_string(path) {
-            Ok(content) => (content, None),
-            Err(e) => (String::new(), Some(e.to_string())),
-        }
-    }
-
-    pub fn handle_file_write(path: &str, content: &str) -> (bool, Option<String>) {
-        match std::fs::write(path, content) {
-            Ok(()) => (true, None),
-            Err(e) => (false, Some(e.to_string())),
-        }
-    }
-
-    pub fn handle_terminal_exec(command: &str) -> (String, Option<i32>) {
-        use std::process::Command;
-        let output = Command::new("sh").arg("-c").arg(command).output();
-        match output {
-            Ok(out) => {
-                let mut result = String::new();
-                if !out.stdout.is_empty() {
-                    result.push_str(&String::from_utf8_lossy(&out.stdout));
-                }
-                if !out.stderr.is_empty() {
-                    if !result.is_empty() {
-                        result.push('\n');
-                    }
-                    result.push_str(&String::from_utf8_lossy(&out.stderr));
-                }
-                let exit_code = out.status.code();
-                (result, exit_code)
-            }
-            Err(e) => (e.to_string(), None),
-        }
     }
 }
 

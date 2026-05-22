@@ -3,7 +3,31 @@ use crate::command::chat::app::action::CursorDirection;
 use crate::command::chat::app::ui_state::ConfigTab;
 use crate::command::chat::infra::command;
 use crate::command::chat::storage::ModelProvider;
-use crate::constants::CONFIG_FIELDS;
+use crate::constants::{CONFIG_FIELDS, CONFIG_GLOBAL_FIELDS_TAB};
+
+/// 所有字段数 = provider 字段 + 全局字段
+/// 根据当前 tab 计算字段总数
+pub(super) fn config_tab_field_count(app: &ChatApp) -> usize {
+    match app.ui.config_tab {
+        ConfigTab::Model => CONFIG_FIELDS.len(),
+        ConfigTab::Global => CONFIG_GLOBAL_FIELDS_TAB.len(),
+        ConfigTab::Tools => app.tool_registry.tool_names().len(),
+        ConfigTab::Skills => app.state.loaded_skills.len(),
+        ConfigTab::Commands => app.state.loaded_commands.len(),
+        ConfigTab::Hooks => app
+            .hook_manager
+            .lock()
+            .map(|m| m.list_hooks().len())
+            .unwrap_or(0),
+        ConfigTab::Session => app.ui.session_list.len(),
+        ConfigTab::Teammates => app
+            .teammate_manager
+            .lock()
+            .map(|m| m.teammates.len())
+            .unwrap_or(0),
+        ConfigTab::Archive => app.ui.archives.len(),
+    }
+}
 
 impl ChatApp {
     pub(super) fn update_config_navigate(&mut self, dir: CursorDirection) {
@@ -50,7 +74,7 @@ impl ChatApp {
         }
 
         // 其他 Tab 保持原有逻辑
-        let total_fields = super::config_tab_field_count(self);
+        let total_fields = config_tab_field_count(self);
         if total_fields == 0 {
             return;
         }
@@ -391,7 +415,7 @@ impl ChatApp {
 
     /// 配置界面：鼠标点击选中指定字段索引
     pub(super) fn update_config_field_select(&mut self, idx: usize) {
-        let total = super::config_tab_field_count(self);
+        let total = config_tab_field_count(self);
         if total > 0 && idx < total {
             self.ui.config_field_idx = idx;
         }
@@ -449,7 +473,7 @@ impl ChatApp {
         }
 
         // 其他 Tab 保持原有逻辑
-        let total = super::config_tab_field_count(self);
+        let total = config_tab_field_count(self);
         if total == 0 {
             return;
         }

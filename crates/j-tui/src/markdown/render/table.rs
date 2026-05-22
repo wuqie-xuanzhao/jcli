@@ -157,10 +157,7 @@ pub fn render_table(
                     actual_w = w;
                 }
                 let fill = cw.saturating_sub(actual_w);
-                let align = alignments
-                    .get(i)
-                    .copied()
-                    .unwrap_or(j_md::Alignment::None);
+                let align = alignments.get(i).copied().unwrap_or(j_md::Alignment::None);
                 let (left_pad, right_pad) = match align {
                     j_md::Alignment::Center => {
                         let left = fill / 2;
