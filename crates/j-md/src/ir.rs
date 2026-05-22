@@ -4,6 +4,7 @@
 //! IR 与终端宽度、主题、平台无关，可被多次渲染。
 
 /// 表格列对齐方式
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Alignment {
     #[default]

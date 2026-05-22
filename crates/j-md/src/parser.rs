@@ -1,5 +1,3 @@
-mod table;
-
 use crate::ir::{
     Alignment, Block, BlockKind, Inline, ListData, ListItem, ParsedDocument, SourceRange,
     TableData,
