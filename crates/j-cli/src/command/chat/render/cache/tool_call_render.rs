@@ -10,8 +10,7 @@ mod bash;
 mod description;
 mod file_tools;
 mod other_tools;
-mod task_tools;
-mod web_tools;
+mod specialized_tools;
 
 use crate::command::chat::constants::TOOL_ARG_PREVIEW_MAX_CHARS;
 use crate::command::chat::render::theme::ToolCategoryColor;
@@ -48,9 +47,9 @@ use other_tools::{
     render_todo_write_call_request_expanded, render_work_done_call_request_expanded,
     render_worktree_call_request_expanded,
 };
-use task_tools::{render_task_call_request_expanded, render_task_output_call_request_expanded};
-use web_tools::{
-    render_browser_call_request_expanded, render_web_fetch_call_request_expanded,
+use specialized_tools::{
+    render_browser_call_request_expanded, render_task_call_request_expanded,
+    render_task_output_call_request_expanded, render_web_fetch_call_request_expanded,
     render_web_search_call_request_expanded,
 };
 
@@ -58,6 +57,7 @@ use web_tools::{
 // 1. render_tool_call_request_msg (pub fn)
 // ──────────────────────────────────────────────────────────────
 
+/// 渲染工具调用请求消息的气泡内容
 pub fn render_tool_call_request_msg(
     sender_name: Option<&str>,
     tool_calls: &[ToolCallItem],

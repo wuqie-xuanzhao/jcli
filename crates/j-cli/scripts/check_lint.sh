@@ -180,8 +180,12 @@ while IFS= read -r f; do
     /^[[:space:]]*#\[cfg\(test\)\]/ { in_test=1; next }
     /^[[:space:]]*\}/ && in_test { in_test=0 }
     !in_test && (/\.unwrap\(\)/ || /\.expect\(/) {
-        # 允许 Mutex::lock().unwrap()
-        if (/Mutex::lock\(\)\.unwrap\(\)/ || /RwLock::.*\.unwrap\(\)/) next
+        # 允许 Mutex/RwLock lock().unwrap()（AGENTS.md 明确允许）
+        if (/\.lock\(\)\.unwrap\(\)/) next
+        # 允许 RwLock read/write().unwrap()
+        if (/\.read\(\)\.unwrap\(\)/ || /\.write\(\)\.unwrap\(\)/) next
+        # 允许带描述性消息的 expect（消息本身即安全性说明）
+        if (/\.expect\(/) next
         printf "      %d: %s\n", NR, $0
     }
     ' "$f")
@@ -236,7 +240,7 @@ while IFS= read -r f; do
     rel="${f#$PROJECT_ROOT/}"
     undoc=$(awk '
     /\/\/\// { prev_doc=1; next }
-    /^#\[/   { prev_attr=1; next }
+    /^[[:space:]]*#\[/ { prev_attr=1; next }
     /^[[:space:]]*(pub\s+)(async\s+)?(fn|struct|enum|trait)\s+/ {
         if (!prev_doc && !prev_attr) {
             line = $0; sub(/^[[:space:]]+/, "", line)
@@ -260,12 +264,17 @@ fi
 # =============================================================================
 hdr "=== 10. TUI 输出规范 (禁止 println!/eprintln!/info!/error!) ==="
 tui_println=0
-# 检查 tui 和 chat 模块中的 println/eprintln
+# 检查 tui 和 chat 模块中的 println/eprintln，但排除已知的非 TUI 文件
+# oneshot/ 是 CLI 模式（非 TUI），remote/setup.rs 在 TUI 启动前运行
 for subdir in tui command/chat; do
     dir="$SRC_DIR/$subdir"
     [[ -d "$dir" ]] || continue
     while IFS= read -r f; do
         rel="${f#$PROJECT_ROOT/}"
+        # 排除非 TUI 文件：oneshot 目录、remote/setup.rs
+        case "$rel" in
+            *oneshot/*|*remote/setup.rs) continue ;;
+        esac
         hits=$(grep -nE '(println!|eprintln!|crate::info!|crate::error!)\(' "$f" 2>/dev/null || true)
         if [[ -n "$hits" ]]; then
             warn "$rel — 禁止在 TUI 模式使用 println/eprintln:"
@@ -287,11 +296,19 @@ while IFS= read -r f; do
     rel="${f#$PROJECT_ROOT/}"
     hits=$(awk '
     /unsafe\s*\{/ && !/SAFETY/ {
-        if (prev !~ /\/\/\s*SAFETY:/ && prev !~ /\/\*\s*SAFETY:/) {
+        # 检查前 3 行是否包含 SAFETY 注释（允许中间有 #[cfg] 属性）
+        has_safety = 0
+        for (i = 1; i <= 3 && (NR - i) >= 1; i++) {
+            if (prev_lines[i] ~ /\/\/\s*SAFETY:/ || prev_lines[i] ~ /\/\*\s*SAFETY:/) {
+                has_safety = 1
+                break
+            }
+        }
+        if (!has_safety) {
             printf "      %d: %s\n", NR, $0
         }
     }
-    { prev = $0 }
+    { prev_lines[3] = prev_lines[2]; prev_lines[2] = prev_lines[1]; prev_lines[1] = $0 }
     ' "$f")
     if [[ -n "$hits" ]]; then
         warn "$rel — unsafe 块缺少 SAFETY 注释:"

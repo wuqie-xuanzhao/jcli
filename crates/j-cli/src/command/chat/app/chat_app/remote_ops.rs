@@ -4,6 +4,7 @@ use crate::command::chat::remote::protocol::FileEntry;
 pub struct RemoteOps;
 
 impl RemoteOps {
+    /// 列出指定路径下的文件和目录（隐藏文件除外）
     pub fn handle_file_list(path: &str) -> Vec<FileEntry> {
         let dir = if path.is_empty() { "." } else { path };
         let mut entries = Vec::new();
@@ -41,6 +42,7 @@ impl RemoteOps {
         entries
     }
 
+    /// 读取文件内容，返回 (内容, 错误信息)
     pub fn handle_file_read(path: &str) -> (String, Option<String>) {
         match std::fs::read_to_string(path) {
             Ok(content) => (content, None),
@@ -48,6 +50,7 @@ impl RemoteOps {
         }
     }
 
+    /// 写入文件内容，返回 (是否成功, 错误信息)
     pub fn handle_file_write(path: &str, content: &str) -> (bool, Option<String>) {
         match std::fs::write(path, content) {
             Ok(()) => (true, None),
@@ -55,6 +58,7 @@ impl RemoteOps {
         }
     }
 
+    /// 在 shell 中执行命令，返回 (输出内容, 退出码)
     pub fn handle_terminal_exec(command: &str) -> (String, Option<i32>) {
         use std::process::Command;
         let output = Command::new("sh").arg("-c").arg(command).output();
@@ -80,18 +84,22 @@ impl RemoteOps {
 
 // 保留 ChatApp 上的静态方法包装，方便调用方
 impl super::ChatApp {
+    /// 列出指定路径下的文件和目录（委托 RemoteOps）
     pub fn handle_file_list(path: &str) -> Vec<FileEntry> {
         RemoteOps::handle_file_list(path)
     }
 
+    /// 读取文件内容（委托 RemoteOps）
     pub fn handle_file_read(path: &str) -> (String, Option<String>) {
         RemoteOps::handle_file_read(path)
     }
 
+    /// 写入文件内容（委托 RemoteOps）
     pub fn handle_file_write(path: &str, content: &str) -> (bool, Option<String>) {
         RemoteOps::handle_file_write(path, content)
     }
 
+    /// 在 shell 中执行命令（委托 RemoteOps）
     pub fn handle_terminal_exec(command: &str) -> (String, Option<i32>) {
         RemoteOps::handle_terminal_exec(command)
     }

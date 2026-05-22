@@ -9,6 +9,7 @@ use crate::command::chat::tools::task::{TaskManager, build_tasks_summary};
 use crate::util;
 use std::sync::{Arc, Mutex};
 
+/// 系统提示模板中的静态占位符值（构建时一次性填充）
 pub struct StaticPlaceholderValues<'a> {
     pub skills_summary: &'a str,
     pub tools_summary: &'a str,
@@ -111,6 +112,7 @@ use super::chat_app::ChatApp;
 use crate::command::chat::storage::ChatMessage;
 
 impl ChatApp {
+    /// 构建当前 system prompt 的完整文本（用于 UI 调试展示）
     pub fn build_current_system_prompt(&self) -> Option<String> {
         let template = load_system_prompt()?;
         let skills_summary = skill::build_skills_summary(

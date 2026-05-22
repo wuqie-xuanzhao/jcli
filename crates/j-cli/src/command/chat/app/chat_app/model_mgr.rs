@@ -21,6 +21,7 @@ impl ChatApp {
             .unwrap_or_else(|| "未配置".to_string())
     }
 
+    /// 切换到用户在模型选择器中选中的模型，并持久化配置
     pub fn switch_model(&mut self) {
         if let Some(sel) = self.ui.model_list_state.selected() {
             self.state.agent_config.active_index = sel;

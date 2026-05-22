@@ -19,16 +19,14 @@ use crate::util::text::{
 };
 
 // 导入子模块
-mod command_line;
-mod common;
 mod file_operations;
+mod helpers;
 mod search_tools;
 mod task_management;
 
 // 公开导出子模块中需要外部使用的函数
-pub(crate) use command_line::render_bash_result;
-pub(crate) use common::{render_agent_result_nested, render_diff_content};
 pub(crate) use file_operations::render_glob_result;
+pub(crate) use helpers::{render_agent_result_nested, render_bash_result, render_diff_content};
 pub(crate) use search_tools::{
     render_grep_result, render_web_fetch_result, render_web_search_result,
 };

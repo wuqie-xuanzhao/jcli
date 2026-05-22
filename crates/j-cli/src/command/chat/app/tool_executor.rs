@@ -37,6 +37,7 @@ impl Default for ToolExecutor {
 }
 
 impl ToolExecutor {
+    /// 创建默认状态的工具执行器
     pub fn new() -> Self {
         Self {
             active_tool_calls: Vec::new(),

@@ -10,7 +10,7 @@ use ratatui::{
     text::{Line, Span},
 };
 
-use super::super::bubble::bordered_line;
+use crate::command::chat::render::cache::bubble::bordered_line;
 
 // ──────────────────────────────────────────────────────────────
 // AgentCallArgs

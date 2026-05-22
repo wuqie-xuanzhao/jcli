@@ -444,15 +444,15 @@ impl NotebookApp {
 
     /// 保存当前编辑器内容到磁盘
     pub fn save_editor_content(&mut self) -> bool {
-        if self.editor.is_none() || self.editing_path.is_none() {
+        let Some(editor) = &self.editor else {
             return false;
-        }
+        };
+        let Some(path) = &self.editing_path else {
+            return false;
+        };
 
-        let path = self.editing_path.clone().unwrap();
-        let file_path = super::io::note_file_path(&path);
-
-        // 获取编辑器当前内容
-        let content = self.editor.as_ref().unwrap().content();
+        let file_path = super::io::note_file_path(path);
+        let content = editor.content();
 
         // 写入文件
         match std::fs::write(&file_path, &content) {

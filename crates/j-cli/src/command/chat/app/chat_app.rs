@@ -500,6 +500,7 @@ impl ChatApp {
         self.ui.msg_lines_cache = None;
     }
 
+    /// 显示一条 toast 提示消息（is_error=true 时以错误色显示）
     pub fn show_toast(&mut self, msg: impl Into<String>, is_error: bool) {
         self.ui.toast = Some((msg.into(), is_error, std::time::Instant::now()));
     }

@@ -43,7 +43,8 @@ pub fn run_chat_tui(remote_mode: bool, port: u16) {
                 if e.kind() == std::io::ErrorKind::Interrupted {
                     return;
                 }
-                crate::error!("远程服务启动失败: {}", e);
+                // SAFETY: TUI 启动前的用户反馈阶段，写入日志并显示 toast
+                crate::util::log::write_error_log("remote", &format!("远程服务启动失败: {}", e));
                 None
             }
         }

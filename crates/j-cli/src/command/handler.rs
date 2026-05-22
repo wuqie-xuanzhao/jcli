@@ -23,6 +23,7 @@ macro_rules! command_handlers {
         ),* $(,)?
     ) => {
         $(
+            #[allow(missing_docs)]
             pub struct $name {
                 $( pub $field: $ty, )*
             }
