@@ -1,3 +1,29 @@
+# v12.10.71
+
+
+### 新功能
+
+- **工具结果分类摘要全覆盖**: 为 Write、Edit、Glob、Grep、WebFetch、WebSearch、Browser、TaskOutput、LoadSkill、LoadTool、PlanMode、Worktree、ComputerUse 等所有工具添加专用的结果摘要函数，TUI 中工具调用结果展示更直观
+- **工具调用描述补全**: 新增 `extract_tool_description_from_args` 对 LoadTool、Session 工具的描述提取，折叠视图下显示更有意义的工具调用标签
+- **TaskOutput 结构化渲染**: 为 TaskOutput 工具结果新增专用渲染器，解析 JSON 输出并以带状态图标、命令高亮、输出折叠的结构化格式展示任务执行结果
+- **配置页鼠标选区复制**: 配置页（Config 模式）支持鼠标拖拽选区和复制文本，新增行缓存、内容区域 inner rect 和滚动偏移记录，与 Help 模式选区体验一致
+- **`j md` 无参数快捷编辑**: 无参数调用 `j md` 时自动创建并编辑临时笔记 `temp_note_{N}.md`（N 自增），与 `j notebook` 无参数进入 TUI 列表的行为区分开
+
+### 改进
+
+- **版本升级至 v12.10.71**: 同步更新 Cargo.toml、install.sh、install.ps1 及 j-agent 版本号
+
+# v12.10.70
+
+
+### 新功能
+
+- **`~/` 路径补全**: 文件弹窗和 `@` 弹窗现在支持 `~` 路径展开，输入 `~/` 即可浏览用户主目录下的文件，不再返回空结果
+
+### 改进
+
+- **版本升级至 v12.10.70**: 同步更新 Cargo.toml、install.sh、install.ps1 及 j-agent 版本号
+
 # v12.10.69
 
 
@@ -15,6 +41,8 @@
 - **更新机制增强**: 修正更新源仓库名称为 `jcli`，扩展网络错误回退匹配（TLS、证书、连接错误等），Windows 使用 PowerShell 作为备用下载方案
 - **终端状态恢复重构**: 提取 `try_enable_keyboard_enhancement` 和 `restore_terminal_state` 为独立函数，`PopKeyboardEnhancementFlags` 失败不再短路后续终端恢复步骤
 - **代码导入统一**: 统一使用 `use` 导入替代内联完整路径引用，提升可读性
+- **YAML 语法高亮增强**: 为 YAML 文件新增完整的语法高亮支持，包括键名（key）、文档分隔符（`---`/`...`）、列表指示符（`-`）、锚点（`&anchor`）、别名（`*alias`）、合并键（`<<`）、块标量指示符（`|`/`>`）及类型标签（`!!str` 等）的独立着色
+- **YAML 关键字字典扩展**: 补充 `True`/`False`/`TRUE`/`FALSE`/`Null`/`NULL`/`~` 等常见布尔与空值变体，提升关键字识别覆盖率
 
 ### Bug 修复
 
