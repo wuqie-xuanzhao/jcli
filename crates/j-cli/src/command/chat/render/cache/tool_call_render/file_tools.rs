@@ -31,12 +31,13 @@ pub(crate) fn render_glob_grep_call_request_expanded(
         render_kv_line("path", &display_path, content_w, lines, theme);
     }
 
-    // pattern（仅 Grep）
-    if tool_name == tool_names::GREP {
-        if let Some(pattern) = parsed.get("pattern").and_then(|v| v.as_str()) {
-            render_kv_line("pattern", pattern, content_w, lines, theme);
-        }
+    // pattern（Glob 和 Grep 都显示）
+    if let Some(pattern) = parsed.get("pattern").and_then(|v| v.as_str()) {
+        render_kv_line("pattern", pattern, content_w, lines, theme);
+    }
 
+    // 以下仅 Grep
+    if tool_name == tool_names::GREP {
         // output_mode
         if let Some(mode) = parsed.get("output_mode").and_then(|v| v.as_str())
             && mode != "content"

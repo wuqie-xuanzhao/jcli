@@ -1,6 +1,6 @@
 [package]
 name = "j-cli"
-version = "12.10.71"
+version = "12.10.73"
 edition = "2024"
 rust-version = "1.93.1"
 authors = ["lingojack@qq.com"]
@@ -21,7 +21,7 @@ name = "j"
 path = "src/main.rs"
 
 [dependencies]
-j-agent = { version = "12.10.71", path = "../j-agent" }
+j-agent = { version = "12.10.73", path = "../j-agent" }
 j-tui = { path = "../j-tui", features = ["image"] }
 clap = { version = "4", features = ["derive"] }
 rust-embed = { version = "8", features = ["include-exclude"] }
