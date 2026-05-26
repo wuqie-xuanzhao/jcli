@@ -88,6 +88,18 @@ fn render_inline(
             // 硬换行在 inline 层用换行符标记，上层 render_block 需要处理
             out.push(Span::raw("\n"));
         }
+        Inline::Image { alt, url: _ } => {
+            if alt.is_empty() {
+                out.push(Span::styled(
+                    "[Image]",
+                    base_style.add_modifier(Modifier::DIM),
+                ));
+            } else {
+                for child in alt {
+                    render_inline(child, base_style, theme, out);
+                }
+            }
+        }
     }
 }
 
@@ -104,6 +116,7 @@ fn collect_inline_text(inlines: &[Inline]) -> String {
             Inline::Link { text, .. } => result.push_str(&collect_inline_text(text)),
             Inline::SoftBreak => result.push(' '),
             Inline::HardBreak => result.push('\n'),
+            Inline::Image { alt, .. } => result.push_str(&collect_inline_text(alt)),
         }
     }
     result
@@ -122,6 +135,7 @@ pub fn inline_display_width(inlines: &[Inline]) -> usize {
             Inline::SoftBreak => 1,
             Inline::HardBreak => 0,
             Inline::Link { text, .. } => inline_display_width(text),
+            Inline::Image { alt, .. } => inline_display_width(alt),
         })
         .sum()
 }

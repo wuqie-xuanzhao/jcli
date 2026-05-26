@@ -1,5 +1,5 @@
 use super::*;
-use crate::editor_core::EditorTheme;
+use crate::editor_core::{EditorTheme, theme::BorderStyle};
 use crate::markdown::ir::Inline;
 use crate::markdown::render::table::wrap_cell_inlines;
 use crate::util::text::char_width;
@@ -62,6 +62,7 @@ fn test_theme() -> EditorTheme {
         code_lifetime: Color::LightYellow,
         code_attribute: Color::LightCyan,
         code_shell_var: Color::LightCyan,
+        code_border_style: BorderStyle::default(),
     }
 }
 

@@ -117,6 +117,8 @@ pub enum Inline {
     Code(String),
     /// 链接
     Link { text: Vec<Inline>, url: String },
+    /// 图片
+    Image { alt: Vec<Inline>, url: String },
     /// 软换行（渲染时转为空格）
     SoftBreak,
     /// 硬换行（渲染时保留换行）

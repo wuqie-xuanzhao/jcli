@@ -524,13 +524,21 @@ pub fn parse_markdown(md: &str) -> ParsedDocument {
             }
 
             Event::Start(Tag::Image { dest_url, .. }) => {
-                ctx.flush_paragraph();
                 ctx.image_url = Some(dest_url.to_string());
                 ctx.image_alt.clear();
             }
             Event::End(TagEnd::Image) => {
-                if let Some(_url) = ctx.image_url.take() {
-                    // Image handling deferred to future step
+                if let Some(url) = ctx.image_url.take() {
+                    let alt = std::mem::take(&mut ctx.image_alt);
+                    let alt_inlines = if alt.is_empty() {
+                        vec![]
+                    } else {
+                        vec![Inline::Text(alt)]
+                    };
+                    ctx.push_inline(Inline::Image {
+                        alt: alt_inlines,
+                        url,
+                    });
                 }
                 ctx.image_alt.clear();
             }
@@ -694,5 +702,178 @@ mod tests {
             .iter()
             .find(|b| matches!(&b.kind, BlockKind::Table(_)));
         assert!(table_block.is_some());
+    }
+
+    #[test]
+    fn parse_thematic_break() {
+        let md = "before\n\n---\n\nafter";
+        let doc = parse_markdown(md);
+        // Should produce: paragraph("before"), rule, paragraph("after")
+        assert_eq!(doc.blocks.len(), 3, "expected 3 blocks: para, rule, para");
+        assert!(
+            matches!(&doc.blocks[0].kind, BlockKind::Paragraph(_)),
+            "first block should be paragraph"
+        );
+        assert!(
+            matches!(&doc.blocks[1].kind, BlockKind::Rule),
+            "second block should be rule"
+        );
+        assert!(
+            matches!(&doc.blocks[2].kind, BlockKind::Paragraph(_)),
+            "third block should be paragraph"
+        );
+    }
+
+    #[test]
+    fn parse_thematic_break_variants() {
+        for sep in &["---", "***", "___"] {
+            let doc = parse_markdown(sep);
+            assert_eq!(
+                doc.blocks.len(),
+                1,
+                "variant '{sep}' should produce 1 block"
+            );
+            assert!(
+                matches!(&doc.blocks[0].kind, BlockKind::Rule),
+                "variant '{sep}' should be a rule"
+            );
+        }
+    }
+
+    // ── 边界情况 ──
+    #[test]
+    fn parse_empty_input() {
+        let doc = parse_markdown("");
+        assert!(
+            doc.blocks.is_empty(),
+            "empty input should produce no blocks"
+        );
+    }
+
+    #[test]
+    fn parse_whitespace_only() {
+        let doc = parse_markdown("   \n\n  \n");
+        // pulldown_cmark may produce empty paragraph(s) or no blocks
+        // Either is acceptable; we just check it doesn't panic
+        let _ = doc.blocks.len();
+    }
+
+    #[test]
+    fn parse_multiple_paragraphs() {
+        let md = "first paragraph.\n\nsecond paragraph.";
+        let doc = parse_markdown(md);
+        assert_eq!(doc.blocks.len(), 2);
+        assert!(matches!(&doc.blocks[0].kind, BlockKind::Paragraph(_)));
+        assert!(matches!(&doc.blocks[1].kind, BlockKind::Paragraph(_)));
+    }
+
+    // ── 有序列表 ──
+    #[test]
+    fn parse_ordered_list() {
+        let md = "1. first\n2. second\n3. third";
+        let doc = parse_markdown(md);
+        assert_eq!(doc.blocks.len(), 1);
+        match &doc.blocks[0].kind {
+            BlockKind::List(data) => {
+                assert!(data.ordered, "should be ordered list");
+                assert_eq!(data.items.len(), 3);
+            }
+            _ => panic!("expected ordered list"),
+        }
+    }
+
+    // ── 任务列表 ──
+    #[test]
+    fn parse_task_list() {
+        let md = "- [ ] todo\n- [x] done";
+        let doc = parse_markdown(md);
+        assert_eq!(doc.blocks.len(), 1);
+        match &doc.blocks[0].kind {
+            BlockKind::List(data) => {
+                assert!(!data.ordered);
+                assert_eq!(data.items.len(), 2);
+            }
+            _ => panic!("expected task list"),
+        }
+    }
+
+    // ── 链接 ──
+    #[test]
+    fn parse_link_in_paragraph() {
+        let md = "visit [GitHub](https://github.com) now";
+        let doc = parse_markdown(md);
+        assert_eq!(doc.blocks.len(), 1);
+        match &doc.blocks[0].kind {
+            BlockKind::Paragraph(inlines) => {
+                let has_link = inlines.iter().any(|i| matches!(i, Inline::Link { .. }));
+                assert!(has_link, "should contain a link inline");
+            }
+            _ => panic!("expected paragraph"),
+        }
+    }
+
+    // ── 图片 ──
+    #[test]
+    fn parse_image() {
+        let md = "![alt text](image.png)";
+        let doc = parse_markdown(md);
+        assert_eq!(doc.blocks.len(), 1);
+        match &doc.blocks[0].kind {
+            BlockKind::Paragraph(inlines) => {
+                let has_image = inlines.iter().any(|i| matches!(i, Inline::Image { .. }));
+                assert!(has_image, "should contain an image inline");
+            }
+            _ => panic!("expected paragraph"),
+        }
+    }
+
+    #[test]
+    fn parse_image_inline_not_split_paragraph() {
+        let md = "text before ![img](url) text after";
+        let doc = parse_markdown(md);
+        // Image is inline — should not split paragraph
+        assert_eq!(
+            doc.blocks.len(),
+            1,
+            "inline image should not split paragraph"
+        );
+        match &doc.blocks[0].kind {
+            BlockKind::Paragraph(inlines) => {
+                let has_image = inlines.iter().any(|i| matches!(i, Inline::Image { .. }));
+                assert!(has_image);
+            }
+            _ => panic!("expected paragraph"),
+        }
+    }
+
+    // ── HTML 块（应被保留或忽略，但不 panic）──
+    #[test]
+    fn parse_html_block_no_panic() {
+        let md = "<div>hello</div>";
+        let doc = parse_markdown(md);
+        // HTML handling is implementation-specific; just verify no panic
+        let _ = doc.blocks.len();
+    }
+
+    // ── 混合内容 ──
+    #[test]
+    fn parse_mixed_heading_list_code() {
+        let md = "# Title\n\n- item 1\n- item 2\n\n```rust\nlet x = 1;\n```";
+        let doc = parse_markdown(md);
+        assert!(
+            doc.blocks.len() >= 3,
+            "expected at least heading, list, code"
+        );
+    }
+
+    // ── CJK (中日韩) 内容 ──
+    #[test]
+    fn parse_cjk_content() {
+        let md = "## 标题\n\n这是一段中文内容。\n\n- 列表项一\n- 列表项二";
+        let doc = parse_markdown(md);
+        assert!(
+            !doc.blocks.is_empty(),
+            "CJK content should parse without error"
+        );
     }
 }

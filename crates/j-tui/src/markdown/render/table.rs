@@ -336,6 +336,18 @@ fn inline_to_cell_pieces_recursive(
         Inline::HardBreak => {
             out.push(("\n".to_string(), base_style));
         }
+        Inline::Image { alt, .. } => {
+            if alt.is_empty() {
+                out.push((
+                    "[Image]".to_string(),
+                    base_style.add_modifier(Modifier::DIM),
+                ));
+            } else {
+                for child in alt {
+                    inline_to_cell_pieces_recursive(child, base_style, code_style, out);
+                }
+            }
+        }
     }
 }
 
@@ -353,6 +365,7 @@ pub fn display_width_inlines(inlines: &[Inline]) -> usize {
             Inline::SoftBreak => width += 1,
             Inline::HardBreak => {}
             Inline::Link { text, .. } => width += display_width_inlines(text),
+            Inline::Image { alt, .. } => width += display_width_inlines(alt),
         }
     }
     width
