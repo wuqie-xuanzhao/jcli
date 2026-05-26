@@ -204,6 +204,14 @@ impl MarkdownEditor {
         self.buffer.lines().join("\n")
     }
 
+    /// 判断编辑器是否处于"空闲 Normal 模式"（可安全拦截 Esc）
+    ///
+    /// 当 vim 处于 Normal 模式且无活跃搜索时返回 true。
+    /// 此状态下 Esc 对编辑器无实际作用，外部可安全拦截用于焦点切换。
+    pub fn is_idle_normal_mode(&self) -> bool {
+        self.vim.mode() == &Mode::Normal && !self.search.is_searching()
+    }
+
     /// 获取光标所在的视觉行
     pub fn cursor_visual_line(&self) -> usize {
         let (row, col) = self.buffer.cursor();

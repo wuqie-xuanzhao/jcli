@@ -118,60 +118,36 @@ fn run_notebook_tui_internal() -> io::Result<()> {
                                 }
                                 Focus::Editor => {
                                     if let Some(ref mut editor) = app.editor {
-                                        // Esc 在 Normal 模式下直接切回列表
-                                        if key.code == KeyCode::Esc {
-                                            // 检查编辑器是否在 Normal 模式（通过先处理 Esc，
-                                            // 如果返回 Continue 说明已经在 Normal 模式）
-                                            let input =
-                                                crate::tui::editor_core::vim::Input::from_keycode(
-                                                    key.code,
-                                                    key.modifiers,
-                                                );
-                                            let action = editor.handle_input(&input);
-                                            match action {
-                                                crate::tui::editor_core::EditorAction::Continue => {
-                                                    // Esc 在 Normal 模式无效果 → 切回列表
-                                                    if app.editor_dirty {
-                                                        app.save_editor_content();
-                                                    }
-                                                    app.focus = Focus::Tree;
-                                                }
-                                                crate::tui::editor_core::EditorAction::Submit(
-                                                    _,
-                                                ) => {
-                                                    app.save_editor_content();
-                                                    app.focus = Focus::Tree;
-                                                }
-                                                crate::tui::editor_core::EditorAction::Cancel => {
-                                                    app.focus = Focus::Tree;
-                                                }
-                                                crate::tui::editor_core::EditorAction::Save(_) => {
-                                                    app.save_editor_content();
-                                                }
+                                        // Esc 在编辑器空闲 Normal 模式时：焦点回目录树
+                                        if key.code == KeyCode::Esc && editor.is_idle_normal_mode()
+                                        {
+                                            if app.editor_dirty {
+                                                app.save_editor_content();
                                             }
-                                        } else {
-                                            let input =
-                                                crate::tui::editor_core::vim::Input::from_keycode(
-                                                    key.code,
-                                                    key.modifiers,
-                                                );
-                                            let action = editor.handle_input(&input);
-                                            match action {
-                                                crate::tui::editor_core::EditorAction::Save(_) => {
-                                                    app.save_editor_content();
-                                                }
-                                                crate::tui::editor_core::EditorAction::Submit(
-                                                    _,
-                                                ) => {
-                                                    app.save_editor_content();
-                                                    app.focus = Focus::Tree;
-                                                }
-                                                crate::tui::editor_core::EditorAction::Cancel => {
-                                                    app.focus = Focus::Tree;
-                                                }
-                                                crate::tui::editor_core::EditorAction::Continue => {
-                                                    app.editor_dirty = true;
-                                                }
+                                            app.focus = Focus::Tree;
+                                            continue;
+                                        }
+
+                                        // 其他按键正常传递给编辑器
+                                        let input =
+                                            crate::tui::editor_core::vim::Input::from_keycode(
+                                                key.code,
+                                                key.modifiers,
+                                            );
+                                        let action = editor.handle_input(&input);
+                                        match action {
+                                            crate::tui::editor_core::EditorAction::Save(_) => {
+                                                app.save_editor_content();
+                                            }
+                                            crate::tui::editor_core::EditorAction::Submit(_) => {
+                                                app.save_editor_content();
+                                                app.focus = Focus::Tree;
+                                            }
+                                            crate::tui::editor_core::EditorAction::Cancel => {
+                                                app.focus = Focus::Tree;
+                                            }
+                                            crate::tui::editor_core::EditorAction::Continue => {
+                                                app.editor_dirty = true;
                                             }
                                         }
                                     }
