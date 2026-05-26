@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { MarkdownIR } from './MarkdownIR'
+import { TableOfContents, extractHeadings } from './TableOfContents'
 import type { ParsedDocument, RenderedDoc } from './types'
 
 type LoadState =
@@ -9,6 +10,15 @@ type LoadState =
 
 export function Reader() {
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
+
+  // 所有 hooks 必须在条件 return 之前调用（React Hooks 规则）
+  const docKind = state.kind === 'ready' ? state.doc.kind : null
+  const docPayload = state.kind === 'ready' ? state.doc.payload : null
+
+  const headings = useMemo(() => {
+    if (docKind !== 'markdown' || !docPayload) return []
+    return extractHeadings(docPayload as ParsedDocument)
+  }, [docKind, docPayload])
 
   useEffect(() => {
     let cancelled = false
@@ -30,6 +40,15 @@ export function Reader() {
     }
   }, [])
 
+  // 页面关闭时通知后端 shutdown
+  useEffect(() => {
+    const handleUnload = () => {
+      navigator.sendBeacon('/api/shutdown')
+    }
+    window.addEventListener('beforeunload', handleUnload)
+    return () => window.removeEventListener('beforeunload', handleUnload)
+  }, [])
+
   if (state.kind === 'loading') {
     return (
       <div className="min-h-screen bg-[#faf9f6] text-stone-500 flex items-center justify-center text-sm">
@@ -47,6 +66,7 @@ export function Reader() {
   }
 
   const { filename, kind, payload } = state.doc
+  const hasToc = headings.length > 0
 
   return (
     <div className="min-h-screen bg-[#faf9f6] text-stone-800">
@@ -57,11 +77,16 @@ export function Reader() {
             {kind}
           </span>
         </div>
-        <span className="text-xs text-stone-400">在终端按 Ctrl-C 关闭</span>
+        <span className="text-xs text-stone-400">关闭此页面将自动停止服务</span>
       </header>
       <main className="max-w-3xl mx-auto px-6 py-8">
         {renderPayload(kind, payload)}
       </main>
+      {hasToc && (
+        <div className="hidden lg:block fixed right-0 top-16 bottom-0 z-20">
+          <TableOfContents headings={headings} />
+        </div>
+      )}
     </div>
   )
 }

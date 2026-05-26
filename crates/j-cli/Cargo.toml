@@ -1,6 +1,6 @@
 [package]
 name = "j-cli"
-version = "12.10.80"
+version = "12.10.81"
 edition = "2024"
 rust-version = "1.93.1"
 authors = ["lingojack@qq.com"]
@@ -21,7 +21,7 @@ name = "j"
 path = "src/main.rs"
 
 [dependencies]
-j-agent = { version = "12.10.80", path = "../j-agent" }
+j-agent = { version = "12.10.81", path = "../j-agent" }
 j-tui = { path = "../j-tui", features = ["image"] }
 j-md = { path = "../j-md", features = ["serde"] }
 clap = { version = "4", features = ["derive"] }
