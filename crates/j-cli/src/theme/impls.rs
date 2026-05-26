@@ -10,7 +10,7 @@ impl Theme {
     /// 根据主题名称从嵌入资源加载主题
     pub fn from_name(name: &ThemeName) -> Self {
         let filename = format!("themes/{}.json", name.to_str());
-        match Self::load_from_assets(&filename) {
+        let theme = match Self::load_from_assets(&filename) {
             Ok(theme) => theme,
             Err(_) => {
                 // 主题加载失败时静默回退，不输出日志（无 config 上下文）
@@ -24,7 +24,15 @@ impl Theme {
                     Self::terminal_fallback()
                 }
             }
-        }
+        };
+        // 注入全局边框样式配置
+        theme.with_border_style(j_tui::editor_core::theme::current_border_style())
+    }
+
+    /// 设置边框样式（从全局配置注入）
+    fn with_border_style(mut self, style: BorderStyle) -> Self {
+        self.code_border_style = style;
+        self
     }
 
     /// 从 Assets 加载并解析主题 JSON

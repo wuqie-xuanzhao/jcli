@@ -65,18 +65,35 @@ fn run_notebook_tui_internal() -> io::Result<()> {
                                 Focus::Tree => {
                                     // 内联 Normal 模式 Tree 焦点按键处理
                                     match key.code {
+                                        // / 打开目录树命令面板
+                                        KeyCode::Char('/') => {
+                                            app.mode = AppMode::CommandPopup;
+                                            app.cmd_popup_filter.clear();
+                                            app.cmd_popup_selected = 0;
+                                            app.message = None;
+                                        }
+                                        // Esc 退出 notebook
                                         KeyCode::Esc => {
                                             if app.editor_dirty {
                                                 app.save_editor_content();
                                             }
                                             app.should_exit = true;
                                         }
+                                        // 上移
                                         KeyCode::Up | KeyCode::Char('k') => {
+                                            if app.editor_dirty {
+                                                app.save_editor_content();
+                                            }
                                             app.move_up();
                                         }
+                                        // 下移
                                         KeyCode::Down | KeyCode::Char('j') => {
+                                            if app.editor_dirty {
+                                                app.save_editor_content();
+                                            }
                                             app.move_down();
                                         }
+                                        // Enter: 目录→展开/折叠, 文件→焦点到编辑器
                                         KeyCode::Enter => {
                                             if let Some(entry) = app.selected_entry().cloned() {
                                                 match &entry.kind {
@@ -138,6 +155,9 @@ fn run_notebook_tui_internal() -> io::Result<()> {
                                                 );
                                             let action = editor.handle_input(&input);
                                             match action {
+                                                crate::tui::editor_core::EditorAction::Save(_) => {
+                                                    app.save_editor_content();
+                                                }
                                                 crate::tui::editor_core::EditorAction::Submit(
                                                     _,
                                                 ) => {
@@ -147,7 +167,9 @@ fn run_notebook_tui_internal() -> io::Result<()> {
                                                 crate::tui::editor_core::EditorAction::Cancel => {
                                                     app.focus = Focus::Tree;
                                                 }
-                                                _ => {}
+                                                crate::tui::editor_core::EditorAction::Continue => {
+                                                    app.editor_dirty = true;
+                                                }
                                             }
                                         }
                                     }
