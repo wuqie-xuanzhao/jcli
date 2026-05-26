@@ -1,9 +1,0 @@
-E:\Coding\AI\jcli\target-check\debug\deps\socket2-a0d93227d670831a.d: D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\lib.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\sockaddr.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\socket.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\sockref.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\sys\windows.rs
-
-E:\Coding\AI\jcli\target-check\debug\deps\libsocket2-a0d93227d670831a.rmeta: D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\lib.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\sockaddr.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\socket.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\sockref.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\sys\windows.rs
-
-D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\lib.rs:
-D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\sockaddr.rs:
-D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\socket.rs:
-D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\sockref.rs:
-D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\socket2-0.6.3\src\sys\windows.rs:
