@@ -52,17 +52,17 @@ pub fn build_message_lines_incremental(
     let expand = app.ui.expand_tools;
 
     // 构建历史消息缓存（增量复用旧缓存）
-    let (msg_start_lines, per_msg_cache) = build_history_cache(
-        &display_msgs,
+    let (msg_start_lines, per_msg_cache) = build_history_cache(&HistoryBuildParams {
+        display_msgs: &display_msgs,
         old_cache,
         bubble_max_width,
         inner_width,
         t,
         expand,
         is_browse_mode,
-        app.ui.browse_msg_index,
-        app.state.agent_config.flat_bubble,
-    );
+        browse_msg_index: app.ui.browse_msg_index,
+        flat_bubble: app.state.agent_config.flat_bubble,
+    });
 
     // ===== 流式消息单独渲染进 streaming_lines =====
     // 获取流式内容（只 lock 一次，尽快释放锁）
@@ -114,41 +114,44 @@ pub fn build_message_lines_incremental(
     )
 }
 
-/// 构建历史消息渲染缓存（遍历所有消息）
-/// 当历史缓存失效时调用，返回 (msg_start_lines, per_msg_cache)
-#[allow(clippy::too_many_arguments)]
-fn build_history_cache(
-    display_msgs: &[ChatMessage],
-    old_cache: Option<&MsgLinesCache>,
+/// 构建历史消息渲染缓存的参数。
+struct HistoryBuildParams<'a> {
+    display_msgs: &'a [ChatMessage],
+    old_cache: Option<&'a MsgLinesCache>,
     bubble_max_width: usize,
     inner_width: usize,
-    t: &Theme,
+    t: &'a Theme,
     expand: bool,
     is_browse_mode: bool,
     browse_msg_index: usize,
     flat_bubble: bool,
-) -> (Vec<(usize, usize)>, Vec<PerMsgCache>) {
+}
+
+/// 构建历史消息渲染缓存（遍历所有消息）
+/// 当历史缓存失效时调用，返回 (msg_start_lines, per_msg_cache)
+fn build_history_cache(params: &HistoryBuildParams<'_>) -> (Vec<(usize, usize)>, Vec<PerMsgCache>) {
     use crate::command::chat::storage::DisplayType;
 
-    let msg_count = display_msgs.len();
+    let msg_count = params.display_msgs.len();
     let mut current_line_offset: usize = 0;
     let mut msg_start_lines: Vec<(usize, usize)> = Vec::with_capacity(msg_count);
     let mut per_msg_cache: Vec<PerMsgCache> = Vec::with_capacity(msg_count);
 
     // 判断旧缓存中的 per_msg_lines 是否可以复用（bubble_max_width 相同且 expand 一致）
-    let can_reuse_per_msg = old_cache
-        .map(|c| c.bubble_max_width == bubble_max_width && c.expand_tools == expand)
+    let can_reuse_per_msg = params
+        .old_cache
+        .map(|c| c.bubble_max_width == params.bubble_max_width && c.expand_tools == params.expand)
         .unwrap_or(false);
 
-    for (idx, m) in display_msgs.iter().enumerate() {
-        let is_selected = is_browse_mode && idx == browse_msg_index;
+    for (idx, m) in params.display_msgs.iter().enumerate() {
+        let is_selected = params.is_browse_mode && idx == params.browse_msg_index;
 
         // 记录消息起始行号
         msg_start_lines.push((idx, current_line_offset));
 
         // P0 优化：尝试直接按索引复用旧缓存
         if can_reuse_per_msg
-            && let Some(old_c) = old_cache
+            && let Some(old_c) = params.old_cache
             && let Some(old_per) = old_c.per_msg_lines.get(idx)
             && old_per.msg_index == idx
             && old_per.content_len == m.content.len()
@@ -170,21 +173,21 @@ fn build_history_cache(
         match m.display_type() {
             DisplayType::User => {
                 let mut ctx = RenderContext {
-                    bubble_max_width,
+                    bubble_max_width: params.bubble_max_width,
                     lines: &mut tmp_lines,
-                    theme: t,
-                    expand,
-                    flat_bubble,
+                    theme: params.t,
+                    expand: params.expand,
+                    flat_bubble: params.flat_bubble,
                 };
-                render_user_msg(&m.content, is_selected, inner_width, &mut ctx);
+                render_user_msg(&m.content, is_selected, params.inner_width, &mut ctx);
             }
             DisplayType::AssistantText => {
                 let mut ctx = RenderContext {
-                    bubble_max_width,
+                    bubble_max_width: params.bubble_max_width,
                     lines: &mut tmp_lines,
-                    theme: t,
-                    expand,
-                    flat_bubble,
+                    theme: params.t,
+                    expand: params.expand,
+                    flat_bubble: params.flat_bubble,
                 };
                 if let Some(ref reasoning) = m.reasoning_content {
                     render_thinking_block(reasoning, &mut ctx);
@@ -200,11 +203,11 @@ fn build_history_cache(
             }
             DisplayType::ToolCallRequest => {
                 let mut ctx = RenderContext {
-                    bubble_max_width,
+                    bubble_max_width: params.bubble_max_width,
                     lines: &mut tmp_lines,
-                    theme: t,
-                    expand,
-                    flat_bubble,
+                    theme: params.t,
+                    expand: params.expand,
+                    flat_bubble: params.flat_bubble,
                 };
                 if let Some(ref reasoning) = m.reasoning_content {
                     render_thinking_block(reasoning, &mut ctx);
@@ -228,7 +231,7 @@ fn build_history_cache(
                     .tool_call_id
                     .as_ref()
                     .and_then(|tid| {
-                        display_msgs[..idx].iter().rev().find_map(|prev| {
+                        params.display_msgs[..idx].iter().rev().find_map(|prev| {
                             prev.tool_calls.as_ref().and_then(|tcs| {
                                 tcs.iter()
                                     .find(|tc| tc.id == *tid)
@@ -239,7 +242,7 @@ fn build_history_cache(
                     .unwrap_or_default();
 
                 let tool_args = m.tool_call_id.as_ref().and_then(|tid| {
-                    display_msgs[..idx].iter().rev().find_map(|prev| {
+                    params.display_msgs[..idx].iter().rev().find_map(|prev| {
                         prev.tool_calls.as_ref().and_then(|tcs| {
                             tcs.iter()
                                 .find(|tc| tc.id == *tid)
@@ -260,20 +263,20 @@ fn build_history_cache(
                         content: &m.content,
                         label: &label,
                         tool_args: tool_args.as_deref(),
-                        bubble_max_width,
-                        theme: t,
-                        expand,
+                        bubble_max_width: params.bubble_max_width,
+                        theme: params.t,
+                        expand: params.expand,
                     },
                     &mut tmp_lines,
                 );
             }
             DisplayType::System => {
                 tmp_lines.push(Line::from(""));
-                let wrapped = wrap_text(&m.content, inner_width.saturating_sub(8));
+                let wrapped = wrap_text(&m.content, params.inner_width.saturating_sub(8));
                 for wl in wrapped {
                     tmp_lines.push(Line::from(Span::styled(
                         format!("    {}  {}", "sys", wl),
-                        Style::default().fg(t.text_system),
+                        Style::default().fg(params.t.text_system),
                     )));
                 }
             }

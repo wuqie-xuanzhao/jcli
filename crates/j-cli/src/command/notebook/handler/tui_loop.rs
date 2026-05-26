@@ -2,6 +2,7 @@
 //!
 //! 包含 Notebook TUI 应用的主事件循环和初始化逻辑。
 
+use crate::command::notebook::app::io::save_expanded_dirs;
 use crate::command::notebook::app::{
     AppMode, FlatEntryKind, Focus, NotebookApp, handle_command_popup_mode, handle_confirm_delete,
     handle_input_mode, handle_ratio_input_mode,
@@ -99,9 +100,7 @@ fn run_notebook_tui_internal() -> io::Result<()> {
                                                 match &entry.kind {
                                                     FlatEntryKind::Dir { dir_path, .. } => {
                                                         app.expanded_dirs.toggle(dir_path);
-                                                        super::super::app::io::save_expanded_dirs(
-                                                            &app.expanded_dirs,
-                                                        );
+                                                        save_expanded_dirs(&app.expanded_dirs);
                                                         app.build_flat_entries();
                                                     }
                                                     FlatEntryKind::File { .. } => {

@@ -27,7 +27,6 @@ use crate::command::chat::storage::{
     save_system_prompt, soul_path, system_prompt_path,
 };
 use crate::command::chat::teammate::TeammateManager;
-use crate::command::chat::tools::ToolRegistry;
 use crate::command::chat::tools::background::BackgroundManager;
 use crate::command::chat::tools::derived_shared::{
     AgentContextConfig, DerivedAgentShared, SubAgentTracker,
@@ -35,6 +34,7 @@ use crate::command::chat::tools::derived_shared::{
 use crate::command::chat::tools::plan::PlanApprovalQueue;
 use crate::command::chat::tools::task::TaskManager;
 use crate::command::chat::tools::todo::TodoManager;
+use crate::command::chat::tools::{ToolDefinitionParams, ToolRegistry};
 use crate::constants::TOAST_DURATION_SECS;
 use crate::markdown::image_cache::ImageCache;
 use crate::theme::Theme;
@@ -186,15 +186,16 @@ impl ChatApp {
         let task_manager = Arc::new(TaskManager::new_with_session(&session_id));
         let hook_manager = Arc::new(Mutex::new(HookManager::load()));
         let invoked_skills = crate::command::chat::context::compact::new_invoked_skills_map();
-        let mut tool_registry = ToolRegistry::new(
-            loaded_skills.clone(),
-            ask_req_tx,
-            Arc::clone(&background_manager),
-            Arc::clone(&task_manager),
-            Arc::clone(&hook_manager),
-            Arc::clone(&invoked_skills),
-            crate::command::chat::storage::SessionPaths::new(&session_id).todos_file(),
-        );
+        let mut tool_registry = ToolRegistry::new(ToolDefinitionParams {
+            skills: loaded_skills.clone(),
+            ask_tx: ask_req_tx,
+            background_manager: Arc::clone(&background_manager),
+            task_manager: Arc::clone(&task_manager),
+            hook_manager: Arc::clone(&hook_manager),
+            invoked_skills: Arc::clone(&invoked_skills),
+            todos_file_path: crate::command::chat::storage::SessionPaths::new(&session_id)
+                .todos_file(),
+        });
         let todo_manager = Arc::clone(&tool_registry.todo_manager);
 
         // AgentTool 需要 provider 和 system_prompt 的共享引用（运行时动态获取）

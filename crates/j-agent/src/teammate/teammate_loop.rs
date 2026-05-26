@@ -84,6 +84,7 @@ pub struct TeammateLoopConfig {
 /// 3. 使用 SendMessage 工具与其他 agent 通信
 /// 4. idle polling — 无工具调用时不立即退出，而是轮询等待新消息
 /// 5. loop 结束后通知团队
+#[allow(clippy::too_many_lines)]
 pub fn run_teammate_loop(config: TeammateLoopConfig) -> String {
     let TeammateLoopConfig {
         name,

@@ -35,35 +35,40 @@ pub fn apply_static_placeholders(template: &str, values: &StaticPlaceholderValue
         .replace("{{.soul}}", values.soul_text)
         .replace("{{.project_instructions}}", values.project_instructions)
 }
+/// 构建每轮调用的 system_prompt_fn 闭包的配置参数。
+pub struct SystemPromptConfig {
+    pub loaded_skills: Vec<skill::Skill>,
+    pub disabled_skills: Vec<String>,
+    pub disabled_tools: Vec<String>,
+    pub deferred_tools: Arc<Mutex<Vec<String>>>,
+    pub tool_registry: Arc<ToolRegistry>,
+    pub teammate_manager: Arc<Mutex<TeammateManager>>,
+    pub task_manager: Arc<TaskManager>,
+    pub background_manager: Arc<BackgroundManager>,
+}
 
 /// 构建每轮调用的 system_prompt_fn 闭包（TUI 和 oneshot 共用）
 ///
 /// 每轮 agent loop 调用此闭包时，动态读取最新的 teammate 状态、task 列表等信息，
 /// 确保 main agent 的 system prompt 始终反映当前团队状态。
-#[allow(clippy::too_many_arguments)]
 pub fn build_system_prompt_fn(
-    loaded_skills: Vec<skill::Skill>,
-    disabled_skills: Vec<String>,
-    disabled_tools: Vec<String>,
-    deferred_tools: Arc<Mutex<Vec<String>>>,
-    tool_registry: Arc<ToolRegistry>,
-    teammate_manager: Arc<Mutex<TeammateManager>>,
-    task_manager: Arc<TaskManager>,
-    background_manager: Arc<BackgroundManager>,
+    config: SystemPromptConfig,
 ) -> Arc<dyn Fn() -> Option<String> + Send + Sync> {
     Arc::new(move || {
         use crate::command::chat::agent_md;
         let template = load_system_prompt()?;
-        let skills_summary = skill::build_skills_summary(&loaded_skills, &disabled_skills);
+        let skills_summary =
+            skill::build_skills_summary(&config.loaded_skills, &config.disabled_skills);
         // 排除 deferred 工具，只将非 deferred 的工具摘要拼入 system prompt。
         // 注意：此处必须 clone 成 Vec 后 drop guard，否则下一行调用 LoadTool::description()
         // 会在同一线程上对 deferred_tools 二次 lock，造成自死锁。
-        let deferred: Vec<String> = match deferred_tools.lock() {
+        let deferred: Vec<String> = match config.deferred_tools.lock() {
             Ok(guard) => guard.clone(),
             Err(e) => e.into_inner().clone(),
         };
-        let tools_summary =
-            tool_registry.build_tools_summary_non_deferred(&disabled_tools, &deferred);
+        let tools_summary = config
+            .tool_registry
+            .build_tools_summary_non_deferred(&config.disabled_tools, &deferred);
         let style_text = load_style().unwrap_or_else(|| "（未设置）".to_string());
         let memory_text = load_memory().unwrap_or_default();
         let soul_text = load_soul().unwrap_or_default();
@@ -77,10 +82,11 @@ pub fn build_system_prompt_fn(
             .unwrap_or_default();
 
         // 动态占位符（每轮更新）
-        let tasks_summary = build_tasks_summary(&task_manager);
-        let background_summary = build_running_summary(&background_manager);
-        let session_state_summary = tool_registry.build_session_state_summary();
-        let teammates_summary = teammate_manager
+        let tasks_summary = build_tasks_summary(&config.task_manager);
+        let background_summary = build_running_summary(&config.background_manager);
+        let session_state_summary = config.tool_registry.build_session_state_summary();
+        let teammates_summary = config
+            .teammate_manager
             .lock()
             .map(|m| m.team_summary())
             .unwrap_or_default();

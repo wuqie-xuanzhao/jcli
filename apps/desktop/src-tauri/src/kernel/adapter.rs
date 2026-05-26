@@ -38,7 +38,7 @@ use j_cli::command::chat::storage::{
     ImageData, MessageRole, ModelProvider, SessionEvent,
 };
 use j_cli::command::chat::tools::background::BackgroundManager;
-use j_cli::command::chat::tools::definition::ToolRegistry;
+use j_cli::command::chat::tools::definition::{ToolDefinitionParams, ToolRegistry};
 use j_cli::command::chat::tools::derived_shared::SubAgentMetrics;
 use j_cli::command::chat::tools::task::TaskManager;
 use j_cli::command::chat::tools::todo::TodoManager;

@@ -1,5 +1,5 @@
 use super::chat_app::ChatApp;
-use super::system_prompt::build_system_prompt_fn;
+use super::system_prompt::{SystemPromptConfig, build_system_prompt_fn};
 use crate::command::chat::agent::config::{AgentLoopConfig, AgentLoopSharedState};
 use crate::command::chat::infra::command;
 use crate::command::chat::infra::hook::{HookContext, HookEvent, HookManager};
@@ -240,16 +240,16 @@ impl ChatApp {
         let disabled_skills = self.state.agent_config.disabled_skills.clone();
         let disabled_tools = self.state.agent_config.disabled_tools.clone();
         let tool_registry_arc = Arc::clone(&self.tool_registry);
-        let system_prompt_fn = build_system_prompt_fn(
+        let system_prompt_fn = build_system_prompt_fn(SystemPromptConfig {
             loaded_skills,
             disabled_skills,
-            disabled_tools.clone(),
-            Arc::clone(&self.deferred_tools),
-            Arc::clone(&tool_registry_arc),
-            Arc::clone(&self.teammate_manager),
-            Arc::clone(&self.task_manager),
-            Arc::clone(&self.background_manager),
-        );
+            disabled_tools: disabled_tools.clone(),
+            deferred_tools: Arc::clone(&self.deferred_tools),
+            tool_registry: Arc::clone(&tool_registry_arc),
+            teammate_manager: Arc::clone(&self.teammate_manager),
+            task_manager: Arc::clone(&self.task_manager),
+            background_manager: Arc::clone(&self.background_manager),
+        });
 
         let hook_manager_clone = match self.hook_manager.lock() {
             Ok(manager) => manager.clone(),

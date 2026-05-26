@@ -177,25 +177,28 @@ impl fmt::Debug for ToolRegistry {
     }
 }
 
+/// 创建 ToolRegistry 的配置参数。
+pub struct ToolDefinitionParams {
+    pub skills: Vec<Skill>,
+    pub ask_tx: mpsc::Sender<AskRequest>,
+    pub background_manager: Arc<BackgroundManager>,
+    pub task_manager: Arc<TaskManager>,
+    pub hook_manager: Arc<Mutex<HookManager>>,
+    pub invoked_skills: InvokedSkillsMap,
+    pub todos_file_path: PathBuf,
+}
+
 impl ToolRegistry {
     /// 创建工具注册中心，初始化所有内置工具及相关状态
-    pub fn new(
-        skills: Vec<Skill>,
-        ask_tx: mpsc::Sender<AskRequest>,
-        background_manager: Arc<BackgroundManager>,
-        task_manager: Arc<TaskManager>,
-        hook_manager: Arc<Mutex<HookManager>>,
-        invoked_skills: InvokedSkillsMap,
-        todos_file_path: PathBuf,
-    ) -> Self {
-        let todo_manager = Arc::new(TodoManager::new_with_file_path(todos_file_path));
+    pub fn new(params: ToolDefinitionParams) -> Self {
+        let todo_manager = Arc::new(TodoManager::new_with_file_path(params.todos_file_path));
         let plan_mode_state = Arc::new(PlanModeState::new());
         let worktree_state = Arc::new(WorktreeState::new());
         let plan_approval_queue = Arc::new(PlanApprovalQueue::new());
 
         let tools: Vec<Box<dyn Tool>> = vec![
             Box::new(ShellTool {
-                manager: Arc::clone(&background_manager),
+                manager: Arc::clone(&params.background_manager),
             }),
             Box::new(ReadFileTool),
             Box::new(WriteFileTool),
@@ -206,16 +209,16 @@ impl ToolRegistry {
             Box::new(WebSearchTool),
             Box::new(BrowserTool),
             Box::new(AskTool {
-                ask_tx: ask_tx.clone(),
+                ask_tx: params.ask_tx.clone(),
             }),
             Box::new(TaskOutputTool {
-                manager: Arc::clone(&background_manager),
+                manager: Arc::clone(&params.background_manager),
             }),
             Box::new(SessionTool {
-                manager: Arc::clone(&background_manager),
+                manager: Arc::clone(&params.background_manager),
             }),
             Box::new(TaskTool {
-                manager: Arc::clone(&task_manager),
+                manager: Arc::clone(&params.task_manager),
             }),
             Box::new(TodoWriteTool {
                 manager: Arc::clone(&todo_manager),
@@ -224,7 +227,9 @@ impl ToolRegistry {
                 manager: Arc::clone(&todo_manager),
             }),
             Box::new(CompactTool),
-            Box::new(RegisterHookTool { hook_manager }),
+            Box::new(RegisterHookTool {
+                hook_manager: params.hook_manager,
+            }),
             #[cfg(target_os = "macos")]
             Box::new(ComputerUseTool::new()),
             Box::new(EnterPlanModeTool {
@@ -232,7 +237,7 @@ impl ToolRegistry {
             }),
             Box::new(ExitPlanModeTool {
                 plan_state: Arc::clone(&plan_mode_state),
-                ask_tx,
+                ask_tx: params.ask_tx,
                 plan_approval_queue: Some(Arc::clone(&plan_approval_queue)),
             }),
             Box::new(EnterWorktreeTool {
@@ -252,10 +257,10 @@ impl ToolRegistry {
             tools,
         };
 
-        if !skills.is_empty() {
+        if !params.skills.is_empty() {
             registry.register(Box::new(LoadSkillTool {
-                skills,
-                invoked_skills,
+                skills: params.skills,
+                invoked_skills: params.invoked_skills,
             }));
         }
 

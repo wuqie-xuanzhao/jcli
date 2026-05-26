@@ -68,6 +68,7 @@ pub fn calc_title_height(app: &ChatApp) -> u16 {
     height.min(8)
 }
 
+#[allow(clippy::too_many_lines)]
 /// 绘制标题栏
 pub fn draw_title_bar(
     f: &mut ratatui::Frame,
@@ -90,53 +91,7 @@ pub fn draw_title_bar(
     };
     let ctx_str = format_context_tokens(estimated_tokens);
 
-    let loading = if app.state.is_loading {
-        // 优先级：重试提示 > 工具执行 > 工具等待确认 > 默认思考中
-        if let Some(ref hint) = app.state.retry_hint {
-            format!(" {}", sanitize_single_line_text(hint))
-        } else {
-            let tool_info = app
-                .tool_executor
-                .active_tool_calls
-                .iter()
-                .find(|tc| matches!(tc.status, ToolExecStatus::Executing))
-                .map(|tc| {
-                    if let Some(ref desc) = tc.tool_description {
-                        format!(
-                            " ⚙ 执行 {} - {}...",
-                            tc.tool_name,
-                            sanitize_single_line_text(desc)
-                        )
-                    } else {
-                        format!(" ⚙ 执行 {}...", tc.tool_name)
-                    }
-                })
-                .or_else(|| {
-                    app.tool_executor
-                        .active_tool_calls
-                        .iter()
-                        .find(|tc| matches!(tc.status, ToolExecStatus::PendingConfirm))
-                        .map(|tc| {
-                            if let Some(ref desc) = tc.tool_description {
-                                format!(
-                                    " ⚙ 调用 {} - {}...",
-                                    tc.tool_name,
-                                    sanitize_single_line_text(desc)
-                                )
-                            } else {
-                                format!(" ⚙ 调用 {}...", tc.tool_name)
-                            }
-                        })
-                });
-            if let Some(info) = tool_info {
-                info
-            } else {
-                " ⏱ 思考中...".to_string()
-            }
-        }
-    } else {
-        String::new()
-    };
+    let loading = compute_loading_text(app);
 
     // 第一行：顶部分割线
     let top_separator = Paragraph::new(Line::styled(
@@ -315,6 +270,57 @@ pub fn draw_title_bar(
                 next_row += 1;
             }
         }
+    }
+}
+
+/// 计算加载状态文本（思考中、工具执行中等）
+fn compute_loading_text(app: &ChatApp) -> String {
+    if app.state.is_loading {
+        // 优先级：重试提示 > 工具执行 > 工具等待确认 > 默认思考中
+        if let Some(ref hint) = app.state.retry_hint {
+            format!(" {}", sanitize_single_line_text(hint))
+        } else {
+            let tool_info = app
+                .tool_executor
+                .active_tool_calls
+                .iter()
+                .find(|tc| matches!(tc.status, ToolExecStatus::Executing))
+                .map(|tc| {
+                    if let Some(ref desc) = tc.tool_description {
+                        format!(
+                            " ⚙ 执行 {} - {}...",
+                            tc.tool_name,
+                            sanitize_single_line_text(desc)
+                        )
+                    } else {
+                        format!(" ⚙ 执行 {}...", tc.tool_name)
+                    }
+                })
+                .or_else(|| {
+                    app.tool_executor
+                        .active_tool_calls
+                        .iter()
+                        .find(|tc| matches!(tc.status, ToolExecStatus::PendingConfirm))
+                        .map(|tc| {
+                            if let Some(ref desc) = tc.tool_description {
+                                format!(
+                                    " ⚙ 调用 {} - {}...",
+                                    tc.tool_name,
+                                    sanitize_single_line_text(desc)
+                                )
+                            } else {
+                                format!(" ⚙ 调用 {}...", tc.tool_name)
+                            }
+                        })
+                });
+            if let Some(info) = tool_info {
+                info
+            } else {
+                " ⏱ 思考中...".to_string()
+            }
+        }
+    } else {
+        String::new()
     }
 }
 

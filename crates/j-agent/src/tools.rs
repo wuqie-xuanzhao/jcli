@@ -29,7 +29,8 @@ pub mod worktree;
 pub use crate::util::path_utils::{effective_cwd, expand_tilde, resolve_path};
 pub use crate::util::shell_safety::{check_blocking_command, is_dangerous_command};
 pub use definition::{
-    ImageData, PlanDecision, Tool, ToolRegistry, ToolResult, parse_tool_args, schema_to_tool_params,
+    ImageData, PlanDecision, Tool, ToolDefinitionParams, ToolRegistry, ToolResult, parse_tool_args,
+    schema_to_tool_params,
 };
 
 /// 工具名称常量 — 所有工具的 NAME 统一在此导出，避免硬编码

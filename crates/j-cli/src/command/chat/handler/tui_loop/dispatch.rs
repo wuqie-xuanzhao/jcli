@@ -12,7 +12,7 @@ use crossterm::{
 };
 use std::io;
 
-use super::super::{
+use crate::command::chat::handler::{
     handle_agent_perm_confirm_mode, handle_archive_confirm_mode, handle_archive_list_mode,
     handle_browse_mode, handle_chat_mode, handle_config_mode, handle_plan_approval_confirm_mode,
     handle_select_model, handle_select_theme, handle_tool_confirm_mode,

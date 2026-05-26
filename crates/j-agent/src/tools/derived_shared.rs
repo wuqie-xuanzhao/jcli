@@ -8,10 +8,10 @@ use crate::message_types::AskRequest;
 use crate::permission::JcliConfig;
 use crate::permission::queue::{PendingAgentPerm, PermissionQueue};
 use crate::storage::{ChatMessage, DisplayHint, MessageRole, ModelProvider, ToolCallItem};
-use crate::tools::ToolRegistry;
 use crate::tools::background::BackgroundManager;
 use crate::tools::plan::{PlanApprovalQueue, PlanModeState};
 use crate::tools::task::TaskManager;
+use crate::tools::{ToolDefinitionParams, ToolRegistry};
 use crate::util::log::write_info_log;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -379,15 +379,15 @@ impl DerivedAgentShared {
     ) -> (ToolRegistry, mpsc::Receiver<AskRequest>) {
         let (ask_tx, ask_rx) = mpsc::channel::<AskRequest>();
 
-        let mut registry = ToolRegistry::new(
-            vec![], // 不传 skills
+        let mut registry = ToolRegistry::new(ToolDefinitionParams {
+            skills: vec![], // 不传 skills
             ask_tx,
-            Arc::clone(&self.background_manager),
-            Arc::clone(&self.task_manager),
-            Arc::clone(&self.hook_manager),
-            new_invoked_skills_map(),
+            background_manager: Arc::clone(&self.background_manager),
+            task_manager: Arc::clone(&self.task_manager),
+            hook_manager: Arc::clone(&self.hook_manager),
+            invoked_skills: new_invoked_skills_map(),
             todos_file_path,
-        );
+        });
         // 将权限队列传入子注册表，使子 agent 的阻塞式确认请求能到达主 TUI
         registry.permission_queue = Some(Arc::clone(&self.permission_queue));
         // 将 Plan 审批队列传入子注册表，使 teammate 的 ExitPlanMode 能路由到主 TUI

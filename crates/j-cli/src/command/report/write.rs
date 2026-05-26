@@ -118,15 +118,15 @@ pub fn write_to_report(content: &str, config: &mut YamlConfig) -> bool {
         .unwrap_or_default();
     let last_day = parse_date(&last_day_str);
 
-    ensure_week_boundary(
+    ensure_week_boundary(EnsureWeekBoundaryParams {
         week_num,
         last_day,
         now,
         report_file,
-        &config_path,
+        config_path: &config_path,
         config,
-        true,
-    );
+        silent: true,
+    });
 
     let today_str = now.format(SIMPLE_DATE_FORMAT);
     let log_entry = format!("- 【{}】 {}\n", today_str, content);
@@ -167,15 +167,15 @@ fn handle_daily_report(content: &str, config: &mut YamlConfig) {
         .unwrap_or_default();
     let last_day = parse_date(&last_day_str);
 
-    let initialized = ensure_week_boundary(
+    let initialized = ensure_week_boundary(EnsureWeekBoundaryParams {
         week_num,
         last_day,
         now,
         report_file,
-        &config_path,
+        config_path: &config_path,
         config,
-        false,
-    );
+        silent: false,
+    });
     if initialized {
         info!("已自动初始化第一周");
     }
@@ -401,50 +401,73 @@ fn handle_sync(date_str: Option<&str>, config: &mut YamlConfig) {
 
 // ========== 配置同步辅助 ==========
 
-/// 确保周边界正确：如果当前日期超过 last_day 则自动开新周。
-/// 返回 true 表示首次初始化（last_day 为 None）。
-fn ensure_week_boundary(
+/// 确保周边界正确的参数。
+struct EnsureWeekBoundaryParams<'a> {
     week_num: i32,
     last_day: Option<NaiveDate>,
     now: chrono::NaiveDate,
-    report_file: &Path,
-    config_path: &Path,
-    config: &mut YamlConfig,
+    report_file: &'a Path,
+    config_path: &'a Path,
+    config: &'a mut YamlConfig,
     silent: bool,
-) -> bool {
-    match last_day {
+}
+
+/// 确保周边界正确：如果当前日期超过 last_day 则自动开新周。
+/// 返回 true 表示首次初始化（last_day 为 None）。
+fn ensure_week_boundary(params: EnsureWeekBoundaryParams<'_>) -> bool {
+    match params.last_day {
         Some(last_day) => {
-            if now > last_day {
-                let next_last_day = now + chrono::Duration::days(6);
+            if params.now > last_day {
+                let next_last_day = params.now + chrono::Duration::days(6);
                 let new_week_title = format!(
                     "# Week{}[{}-{}]\n",
-                    week_num,
-                    now.format(DATE_FORMAT),
+                    params.week_num,
+                    params.now.format(DATE_FORMAT),
                     next_last_day.format(DATE_FORMAT)
                 );
-                if silent {
-                    update_config_files_silent(week_num + 1, &next_last_day, config_path, config);
+                if params.silent {
+                    update_config_files_silent(
+                        params.week_num + 1,
+                        &next_last_day,
+                        params.config_path,
+                        params.config,
+                    );
                 } else {
-                    update_config_files(week_num + 1, &next_last_day, config_path, config);
+                    update_config_files(
+                        params.week_num + 1,
+                        &next_last_day,
+                        params.config_path,
+                        params.config,
+                    );
                 }
-                append_to_file(report_file, &new_week_title);
+                append_to_file(params.report_file, &new_week_title);
             }
             false
         }
         None => {
-            let next_last_day = now + chrono::Duration::days(6);
+            let next_last_day = params.now + chrono::Duration::days(6);
             let new_week_title = format!(
                 "# Week{}[{}-{}]\n",
-                week_num,
-                now.format(DATE_FORMAT),
+                params.week_num,
+                params.now.format(DATE_FORMAT),
                 next_last_day.format(DATE_FORMAT)
             );
-            if silent {
-                update_config_files_silent(week_num + 1, &next_last_day, config_path, config);
+            if params.silent {
+                update_config_files_silent(
+                    params.week_num + 1,
+                    &next_last_day,
+                    params.config_path,
+                    params.config,
+                );
             } else {
-                update_config_files(week_num + 1, &next_last_day, config_path, config);
+                update_config_files(
+                    params.week_num + 1,
+                    &next_last_day,
+                    params.config_path,
+                    params.config,
+                );
             }
-            append_to_file(report_file, &new_week_title);
+            append_to_file(params.report_file, &new_week_title);
             true
         }
     }

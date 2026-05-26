@@ -3,7 +3,7 @@
 use crate::command::chat::agent::config::{AgentLoopConfig, AgentLoopSharedState};
 use crate::command::chat::app::AskRequest;
 use crate::command::chat::app::types::StreamMsg;
-use crate::command::chat::app::{MainAgentHandle, build_system_prompt_fn};
+use crate::command::chat::app::{MainAgentHandle, SystemPromptConfig, build_system_prompt_fn};
 use crate::command::chat::context::compact::new_invoked_skills_map;
 use crate::command::chat::context::window::select_messages;
 use crate::command::chat::infra::hook::{HookContext, HookEvent, HookManager};
@@ -16,10 +16,10 @@ use crate::command::chat::oneshot::tool_exec::handle_tool_call;
 use crate::command::chat::permission::JcliConfig;
 use crate::command::chat::storage::{AgentConfig, ChatMessage, MessageRole, ModelProvider};
 use crate::command::chat::teammate::TeammateManager;
-use crate::command::chat::tools::ToolRegistry;
 use crate::command::chat::tools::background::BackgroundManager;
 use crate::command::chat::tools::task::TaskManager;
 use crate::command::chat::tools::todo::TodoManager;
+use crate::command::chat::tools::{ToolDefinitionParams, ToolRegistry};
 use crate::error;
 use crate::theme::Theme;
 use colored::Colorize;
@@ -164,15 +164,15 @@ pub(crate) fn run_oneshot_agent(
     let hook_manager_for_registry = hook_manager_loaded.clone();
     let invoked_skills = new_invoked_skills_map();
 
-    let mut tool_registry = ToolRegistry::new(
-        vec![],
+    let mut tool_registry = ToolRegistry::new(ToolDefinitionParams {
+        skills: vec![],
         ask_tx,
-        Arc::clone(&background_manager),
-        Arc::clone(&task_manager),
-        Arc::new(Mutex::new(hook_manager_for_registry)),
-        invoked_skills.clone(),
-        crate::command::chat::storage::SessionPaths::new(session_id).todos_file(),
-    );
+        background_manager: Arc::clone(&background_manager),
+        task_manager: Arc::clone(&task_manager),
+        hook_manager: Arc::new(Mutex::new(hook_manager_for_registry)),
+        invoked_skills: invoked_skills.clone(),
+        todos_file_path: crate::command::chat::storage::SessionPaths::new(session_id).todos_file(),
+    });
     // 注册 LoadTool
     let deferred_tools_for_load = Arc::new(Mutex::new(agent_config.deferred_tools.clone()));
     let session_loaded_for_load: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
@@ -199,16 +199,16 @@ pub(crate) fn run_oneshot_agent(
         Arc::new(Mutex::new(Vec::new())),
         Arc::new(Mutex::new(Vec::new())),
     )));
-    let system_prompt_fn = build_system_prompt_fn(
+    let system_prompt_fn = build_system_prompt_fn(SystemPromptConfig {
         loaded_skills,
-        agent_config.disabled_skills.clone(),
-        agent_config.disabled_tools.clone(),
-        Arc::clone(&deferred_tools_for_load),
-        Arc::clone(&tool_registry),
+        disabled_skills: agent_config.disabled_skills.clone(),
+        disabled_tools: agent_config.disabled_tools.clone(),
+        deferred_tools: Arc::clone(&deferred_tools_for_load),
+        tool_registry: Arc::clone(&tool_registry),
         teammate_manager,
-        Arc::clone(&task_manager),
-        Arc::clone(&background_manager),
-    );
+        task_manager: Arc::clone(&task_manager),
+        background_manager: Arc::clone(&background_manager),
+    });
 
     let api_messages = select_messages(
         &messages,

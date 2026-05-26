@@ -456,15 +456,15 @@ fn build_agent_loop_state(
     let (ask_tx, ask_rx) = std::sync::mpsc::channel::<AskRequest>();
     let task_manager = Arc::new(TaskManager::new());
     let hook_manager_for_tools = Arc::new(Mutex::new(HookManager::load()));
-    let tool_registry = Arc::new(ToolRegistry::new(
-        load_all_skills(),
+    let tool_registry = Arc::new(ToolRegistry::new(ToolDefinitionParams {
+        skills: load_all_skills(),
         ask_tx,
-        Arc::clone(&background_manager),
+        background_manager: Arc::clone(&background_manager),
         task_manager,
-        hook_manager_for_tools,
-        Arc::clone(&invoked_skills),
-        todos_file_path(),
-    ));
+        hook_manager: hook_manager_for_tools,
+        invoked_skills: Arc::clone(&invoked_skills),
+        todos_file_path: todos_file_path(),
+    }));
     spawn_unavailable_ask_tool_responder(ask_rx);
     AgentLoopState {
         streaming_content,
