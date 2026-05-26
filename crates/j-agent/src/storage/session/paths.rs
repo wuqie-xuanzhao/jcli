@@ -1,4 +1,4 @@
-use super::super::config::agent_data_dir;
+use crate::storage::config::agent_data_dir;
 use std::fs;
 use std::path::{Path, PathBuf};
 

@@ -1,6 +1,6 @@
-use super::super::types::{MessageRole, SessionEvent, SessionMetrics};
 use super::paths::{SessionPaths, sessions_dir};
 use crate::constants::MESSAGE_PREVIEW_MAX_LEN;
+use crate::storage::types::{MessageRole, SessionEvent, SessionMetrics};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::time::{SystemTime, UNIX_EPOCH};

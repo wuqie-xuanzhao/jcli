@@ -1,7 +1,7 @@
-use super::super::types::{ChatMessage, MessageRole, SessionEvent, SessionOp};
 use super::meta::{SessionMetaFile, load_session_meta_file, save_session_meta_file};
 use super::paths::{SessionPaths, sessions_dir};
 use crate::constants::MESSAGE_PREVIEW_MAX_LEN;
+use crate::storage::types::{ChatMessage, MessageRole, SessionEvent, SessionOp};
 use std::fs;
 use std::io::Write;
 use std::path::Path;

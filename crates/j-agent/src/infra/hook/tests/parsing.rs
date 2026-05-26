@@ -1,5 +1,5 @@
-use super::super::definition::*;
-use super::super::types::*;
+use crate::infra::hook::definition::*;
+use crate::infra::hook::types::*;
 
 #[test]
 fn test_hook_event_roundtrip() {

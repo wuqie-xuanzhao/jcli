@@ -1,9 +1,9 @@
-use super::super::definition::*;
-use super::super::executor::{
+use crate::infra::hook::definition::*;
+use crate::infra::hook::executor::{
     execute_hook_with_provider, execute_llm_hook, execute_shell_hook, extract_json_from_llm_output,
     render_prompt_template,
 };
-use super::super::types::*;
+use crate::infra::hook::types::*;
 use std::sync::Arc;
 
 #[test]

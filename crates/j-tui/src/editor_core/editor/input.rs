@@ -1,10 +1,10 @@
 //! 输入处理：handle_input 主分发器与 handle_mode_input 模式字符处理
 
-use super::super::history::Snapshot;
-use super::super::vim::{
+use super::MarkdownEditor;
+use crate::editor_core::history::Snapshot;
+use crate::editor_core::vim::{
     CmdItem, Input, Key, Mode, Transition, filter_commands, filter_insert_commands,
 };
-use super::MarkdownEditor;
 
 impl MarkdownEditor {
     /// 处理输入

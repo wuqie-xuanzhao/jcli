@@ -1,6 +1,6 @@
-use super::super::definition::*;
-use super::super::manager::*;
-use super::super::types::*;
+use crate::infra::hook::definition::*;
+use crate::infra::hook::manager::*;
+use crate::infra::hook::types::*;
 
 #[test]
 fn test_hook_filter_tool_matcher() {
