@@ -386,3 +386,194 @@ pub(super) fn parse_theme_json(json_str: &str, path: &str) -> Result<Theme, Stri
         serde_json::from_str(json_str).map_err(|e| format!("parse theme {path}: {e}"))?;
     Ok(theme_json.into())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::style::Color;
+
+    // ── parse_color ──
+    #[test]
+    fn test_parse_color_hex_valid() {
+        assert_eq!(parse_color("#ff0000").expect("red"), Color::Rgb(255, 0, 0));
+        assert_eq!(
+            parse_color("#00ff00").expect("green"),
+            Color::Rgb(0, 255, 0)
+        );
+        assert_eq!(parse_color("#0000ff").expect("blue"), Color::Rgb(0, 0, 255));
+        assert_eq!(
+            parse_color("#a1b2c3").expect("mixed"),
+            Color::Rgb(0xa1, 0xb2, 0xc3)
+        );
+    }
+
+    #[test]
+    fn test_parse_color_hex_invalid() {
+        assert!(parse_color("#xyz").is_err(), "3-char hex should fail");
+        assert!(parse_color("#12345").is_err(), "5-char hex should fail");
+        assert!(parse_color("ff0000").is_err(), "missing # prefix");
+    }
+
+    #[test]
+    fn test_parse_color_named() {
+        assert_eq!(parse_color("red").expect("red"), Color::Red);
+        assert_eq!(parse_color("green").expect("green"), Color::Green);
+        assert_eq!(parse_color("blue").expect("blue"), Color::Blue);
+        assert_eq!(parse_color("cyan").expect("cyan"), Color::Cyan);
+        assert_eq!(parse_color("white").expect("white"), Color::White);
+        assert_eq!(parse_color("reset").expect("reset"), Color::Reset);
+    }
+
+    #[test]
+    fn test_parse_color_gray_variants() {
+        assert_eq!(parse_color("gray").expect("gray"), Color::Gray);
+        assert_eq!(parse_color("grey").expect("grey"), Color::Gray);
+        assert_eq!(
+            parse_color("dark_gray").expect("dark_gray"),
+            Color::DarkGray
+        );
+        assert_eq!(
+            parse_color("dark_grey").expect("dark_grey"),
+            Color::DarkGray
+        );
+    }
+
+    #[test]
+    fn test_parse_color_invalid_name() {
+        assert!(parse_color("not_a_color").is_err());
+        assert!(parse_color("").is_err());
+    }
+
+    // ── parse_theme_json ──
+    #[test]
+    fn test_parse_theme_json_valid_minimal() {
+        let json = r##"{
+            "bg_primary": "#1e1e2e",
+            "bg_title": "#181825",
+            "bg_input": "#11111b",
+            "bg_panel": "#1e1e2e",
+            "border_title": "#cba6f7",
+            "border_message": "#45475a",
+            "border_input": "#cba6f7",
+            "border_input_loading": "#f9e2af",
+            "border_config": "#cba6f7",
+            "separator": "#45475a",
+            "bubble_ai": "#313244",
+            "bubble_ai_selected": "#45475a",
+            "bubble_user": "#313244",
+            "bubble_user_selected": "#45475a",
+            "label_ai": "#a6e3a1",
+            "label_user": "#89b4fa",
+            "label_selected": "#f9e2af",
+            "text_normal": "#cdd6f4",
+            "text_bold": "#ffffff",
+            "text_dim": "#6c7086",
+            "text_very_dim": "#585b70",
+            "text_white": "#cdd6f4",
+            "text_system": "#a6adc8",
+            "title_icon": "#cba6f7",
+            "title_separator": "#45475a",
+            "title_model": "#a6e3a1",
+            "title_count": "#f9e2af",
+            "title_loading": "#f9e2af",
+            "input_prompt": "#cba6f7",
+            "input_prompt_loading": "#f9e2af",
+            "cursor_fg": "#1e1e2e",
+            "cursor_bg": "#f5c2e7",
+            "config_pointer": "#f5c2e7",
+            "config_label_selected": "#f5c2e7",
+            "config_label": "#6c7086",
+            "config_value": "#cdd6f4",
+            "config_edit_bg": "#313244",
+            "config_tab_active_bg": "#cba6f7",
+            "config_tab_active_fg": "#1e1e2e",
+            "config_tab_inactive": "#6c7086",
+            "config_toggle_on": "#a6e3a1",
+            "config_toggle_off": "#f38ba8",
+            "config_dim": "#585b70",
+            "help_title": "#cba6f7",
+            "hint_key_fg": "#cba6f7",
+            "help_key": "#f9e2af",
+            "help_desc": "#cdd6f4",
+            "code_default": "#cdd6f4",
+            "code_keyword": "#cba6f7",
+            "code_string": "#a6e3a1",
+            "code_comment": "#6c7086",
+            "code_number": "#fab387",
+            "code_type": "#f9e2af",
+            "code_primitive": "#89b4fa",
+            "code_macro": "#f5c2e7",
+            "code_lifetime": "#f9e2af",
+            "code_attribute": "#89b4fa",
+            "code_shell_var": "#a6e3a1",
+            "hint_key_bg": "#313244",
+            "hint_desc": "#cdd6f4",
+            "hint_separator": "#45475a",
+            "toast_success_border": "#a6e3a1",
+            "toast_success_bg": "#1e1e2e",
+            "toast_success_text": "#cdd6f4",
+            "toast_error_border": "#f38ba8",
+            "toast_error_bg": "#1e1e2e",
+            "toast_error_text": "#cdd6f4",
+            "tool_confirm_border": "#cba6f7",
+            "tool_confirm_bg": "#1e1e2e",
+            "tool_confirm_title": "#f9e2af",
+            "tool_confirm_name": "#89b4fa",
+            "tool_confirm_text": "#cdd6f4",
+            "tool_confirm_label": "#6c7086",
+            "tool_confirm_hint": "#a6adc8",
+            "welcome_border": "#cba6f7",
+            "welcome_text": "#cdd6f4",
+            "welcome_hint": "#6c7086",
+            "welcome_quote": "#a6adc8",
+            "welcome_palette": 3,
+            "model_sel_border": "#cba6f7",
+            "model_sel_title": "#f9e2af",
+            "model_sel_active": "#a6e3a1",
+            "model_sel_inactive": "#6c7086",
+            "model_sel_highlight_bg": "#313244",
+            "model_sel_highlight_fg": "#cdd6f4",
+            "config_title": "#f9e2af",
+            "config_section": "#cba6f7",
+            "config_hint_key": "#cba6f7",
+            "config_hint_desc": "#cdd6f4",
+            "config_api_key": "#f38ba8",
+            "md_h1": "#f9e2af",
+            "md_h2": "#cba6f7",
+            "md_h3": "#89b4fa",
+            "md_h4": "#a6e3a1",
+            "md_heading_sep": "#45475a",
+            "md_inline_code_fg": "#fab387",
+            "md_inline_code_bg": "#313244",
+            "md_list_bullet": "#cba6f7",
+            "md_blockquote_bar": "#cba6f7",
+            "md_blockquote_text": "#a6adc8",
+            "md_blockquote_bg": "#181825",
+            "md_rule": "#45475a",
+            "md_link": "#89b4fa",
+            "code_border": "#45475a",
+            "code_bg": "#11111b",
+            "table_border": "#45475a",
+            "table_header": "#f9e2af",
+            "table_body": "#cdd6f4",
+            "help_path": "#a6e3a1",
+            "help_bg": "#1e1e2e",
+            "diff_add": "#a6e3a1",
+            "diff_del": "#f38ba8",
+            "diff_header": "#89b4fa"
+        }"##;
+        let theme = parse_theme_json(json, "test.json").expect("valid theme JSON");
+        assert_eq!(theme.bg_primary, Color::Rgb(0x1e, 0x1e, 0x2e));
+    }
+
+    #[test]
+    fn test_parse_theme_json_invalid_json() {
+        assert!(parse_theme_json("not json", "test.json").is_err());
+    }
+
+    #[test]
+    fn test_parse_theme_json_missing_fields() {
+        let json = r##"{"bg_primary": "#fff"}"##;
+        assert!(parse_theme_json(json, "test.json").is_err());
+    }
+}

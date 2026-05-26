@@ -1,0 +1,10 @@
+E:\Coding\AI\jcli\target-check\debug\deps\error_code-c921901137ed3f8a.d: D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\lib.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\defs.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\types.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\utils.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\posix.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\system.rs
+
+E:\Coding\AI\jcli\target-check\debug\deps\liberror_code-c921901137ed3f8a.rmeta: D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\lib.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\defs.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\types.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\utils.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\posix.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\system.rs
+
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\lib.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\defs.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\types.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\utils.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\posix.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\error-code-3.3.2\src\system.rs:

@@ -1,0 +1,9 @@
+E:\Coding\AI\jcli\target-check\debug\deps\string_cache-a41a34e0347a9a70.d: D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\lib.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\atom.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\dynamic_set.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\static_sets.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\trivial_impls.rs
+
+E:\Coding\AI\jcli\target-check\debug\deps\libstring_cache-a41a34e0347a9a70.rmeta: D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\lib.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\atom.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\dynamic_set.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\static_sets.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\trivial_impls.rs
+
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\lib.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\atom.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\dynamic_set.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\static_sets.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\string_cache-0.8.9\src\trivial_impls.rs:

@@ -1,0 +1,10 @@
+E:\Coding\AI\jcli\target-check\debug\deps\crokey-e72270e2e8716e4d.d: D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\lib.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\combiner.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\format.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\key_event.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\parse.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\key_combination.rs
+
+E:\Coding\AI\jcli\target-check\debug\deps\libcrokey-e72270e2e8716e4d.rmeta: D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\lib.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\combiner.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\format.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\key_event.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\parse.rs D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\key_combination.rs
+
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\lib.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\combiner.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\format.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\key_event.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\parse.rs:
+D:\Scoop\persist\rustup-msvc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\crokey-1.4.0\src\key_combination.rs:

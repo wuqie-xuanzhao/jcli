@@ -62,6 +62,16 @@ impl BorderStyle {
         }
     }
 
+    /// 获取垂直边框字符
+    pub const fn vertical(&self) -> &'static str {
+        "│"
+    }
+
+    /// 获取水平边框字符
+    pub const fn horizontal(&self) -> &'static str {
+        "─"
+    }
+
     /// 获取右下角字符
     pub const fn bottom_right(&self) -> &'static str {
         match self {
@@ -223,5 +233,51 @@ impl crate::markdown::theme::MdStyle for EditorTheme {
 
     fn code_syntax_theme(&self) -> EditorTheme {
         self.clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_border_style_default_is_rounded() {
+        assert_eq!(BorderStyle::default(), BorderStyle::Rounded);
+    }
+
+    #[test]
+    fn test_border_style_from_config_plain() {
+        assert_eq!(BorderStyle::from_config("plain"), BorderStyle::Plain);
+    }
+
+    #[test]
+    fn test_border_style_from_config_unknown_falls_back_to_rounded() {
+        assert_eq!(BorderStyle::from_config("rounded"), BorderStyle::Rounded);
+        assert_eq!(BorderStyle::from_config(""), BorderStyle::Rounded);
+        assert_eq!(BorderStyle::from_config("garbage"), BorderStyle::Rounded);
+    }
+
+    #[test]
+    fn test_border_style_corners_rounded() {
+        assert_eq!(BorderStyle::Rounded.top_left(), "╭");
+        assert_eq!(BorderStyle::Rounded.top_right(), "╮");
+        assert_eq!(BorderStyle::Rounded.bottom_left(), "╰");
+        assert_eq!(BorderStyle::Rounded.bottom_right(), "╯");
+    }
+
+    #[test]
+    fn test_border_style_corners_plain() {
+        assert_eq!(BorderStyle::Plain.top_left(), "┌");
+        assert_eq!(BorderStyle::Plain.top_right(), "┐");
+        assert_eq!(BorderStyle::Plain.bottom_left(), "└");
+        assert_eq!(BorderStyle::Plain.bottom_right(), "┘");
+    }
+
+    #[test]
+    fn test_border_style_vertical_and_horizontal() {
+        assert_eq!(BorderStyle::Rounded.vertical(), "│");
+        assert_eq!(BorderStyle::Rounded.horizontal(), "─");
+        assert_eq!(BorderStyle::Plain.vertical(), "│");
+        assert_eq!(BorderStyle::Plain.horizontal(), "─");
     }
 }

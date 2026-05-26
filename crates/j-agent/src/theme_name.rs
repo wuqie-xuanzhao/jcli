@@ -113,3 +113,67 @@ impl ThemeName {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_valid_lowercase() {
+        assert_eq!(ThemeName::parse("dark"), ThemeName::Dark);
+        assert_eq!(ThemeName::parse("light"), ThemeName::Light);
+        assert_eq!(ThemeName::parse("midnight"), ThemeName::Midnight);
+        assert_eq!(ThemeName::parse("nord"), ThemeName::Nord);
+        assert_eq!(ThemeName::parse("monokai"), ThemeName::Monokai);
+        assert_eq!(
+            ThemeName::parse("anthropic_light"),
+            ThemeName::AnthropicLight
+        );
+        assert_eq!(ThemeName::parse("anthropic_dark"), ThemeName::AnthropicDark);
+    }
+
+    #[test]
+    fn test_parse_case_insensitive() {
+        assert_eq!(ThemeName::parse("DARK"), ThemeName::Dark);
+        assert_eq!(ThemeName::parse("Midnight"), ThemeName::Midnight);
+        assert_eq!(ThemeName::parse("NORD"), ThemeName::Nord);
+    }
+
+    #[test]
+    fn test_parse_invalid_falls_back_to_default() {
+        assert_eq!(ThemeName::parse("invalid"), ThemeName::default());
+        assert_eq!(ThemeName::parse(""), ThemeName::default());
+    }
+
+    #[test]
+    fn test_to_str_round_trip() {
+        for name in ThemeName::all() {
+            let s = name.to_str();
+            let parsed = ThemeName::parse(s);
+            assert_eq!(parsed, *name, "round-trip failed for {name:?}");
+        }
+    }
+
+    #[test]
+    fn test_display_matches_to_str() {
+        for name in ThemeName::all() {
+            assert_eq!(name.to_string(), name.to_str());
+        }
+    }
+
+    #[test]
+    fn test_all_contains_all_variants() {
+        let all = ThemeName::all();
+        assert_eq!(all.len(), 7, "should have 7 theme variants");
+        // Verify no duplicates
+        let mut seen = std::collections::HashSet::new();
+        for name in all {
+            assert!(seen.insert(name.to_str()), "duplicate: {name:?}");
+        }
+    }
+
+    #[test]
+    fn test_default_is_midnight() {
+        assert_eq!(ThemeName::default(), ThemeName::Midnight);
+    }
+}
