@@ -42,6 +42,7 @@ enum InlineContainer {
 ///
 /// 使用 pulldown-cmark 的 inline-only 解析，提取 **bold**、*italic*、
 /// ~~strike~~、`code`、[link]() 等元素。
+#[allow(clippy::too_many_lines)]
 fn parse_inline_text(text: &str) -> Vec<Inline> {
     use pulldown_cmark::{Event, Options, Parser, Tag, TagEnd};
 

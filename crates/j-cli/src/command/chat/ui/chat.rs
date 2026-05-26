@@ -26,6 +26,7 @@ use ratatui::{
     widgets::{Block, Clear},
 };
 
+#[allow(clippy::too_many_lines)]
 /// 绘制 Chat 主界面：标题栏、消息区、输入区、提示栏及各类弹窗覆盖层
 pub fn draw_chat_ui(f: &mut ratatui::Frame, app: &mut crate::command::chat::app::ChatApp) {
     let size = f.area();

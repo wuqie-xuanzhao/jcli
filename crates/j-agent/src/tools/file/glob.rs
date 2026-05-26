@@ -64,6 +64,7 @@ impl Tool for GlobTool {
         schema_to_tool_params::<GlobParams>()
     }
 
+    #[allow(clippy::too_many_lines)]
     fn execute(&self, arguments: &str, _cancelled: &Arc<AtomicBool>) -> ToolResult {
         let params: GlobParams = match parse_tool_args(arguments) {
             Ok(p) => p,

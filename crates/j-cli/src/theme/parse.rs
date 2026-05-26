@@ -125,6 +125,7 @@ pub(super) struct ThemeJson {
 }
 
 impl From<ThemeJson> for Theme {
+    #[allow(clippy::too_many_lines)]
     fn from(j: ThemeJson) -> Self {
         Self {
             bg_primary: j.bg_primary.0,

@@ -176,6 +176,8 @@ impl ShellTool {
     /// 同步执行命令：spawn → 轮询等待 → 收集输出
     /// 超过 SHELL_AUTO_BG_SECS 仍未结束时，自动将进程移交给 BackgroundManager，
     /// 不杀进程，立即返回 task_id，进程在后台继续运行
+    #[allow(clippy::too_many_lines)]
+    #[allow(clippy::too_many_arguments)]
     fn execute_sync(
         &self,
         command: &str,
@@ -439,6 +441,7 @@ impl ShellTool {
     }
 
     /// 在后台线程执行命令，立即返回 task_id
+    #[allow(clippy::too_many_lines)]
     fn execute_background(
         &self,
         command: String,
@@ -593,6 +596,7 @@ impl ShellTool {
     }
 
     /// 使用 PTY 启动交互式命令，立即返回 sid
+    #[allow(clippy::too_many_lines)]
     fn execute_interactive(
         &self,
         command: &str,

@@ -12,6 +12,7 @@ use ratatui::{
 };
 
 /// 绘制 TUI 界面
+#[allow(clippy::too_many_lines)]
 pub fn draw_ui(f: &mut ratatui::Frame, app: &mut NotebookApp) {
     let size = f.area();
 
@@ -101,6 +102,7 @@ pub fn draw_ui(f: &mut ratatui::Frame, app: &mut NotebookApp) {
     f.render_widget(help_widget, chunks[3]);
 }
 
+#[allow(clippy::too_many_lines)]
 /// 渲染笔记列表（树形结构）
 fn render_list(f: &mut ratatui::Frame, app: &mut NotebookApp, area: Rect) {
     let inner_width = area.width.saturating_sub(2) as usize; // 减边框
@@ -212,6 +214,7 @@ fn render_list(f: &mut ratatui::Frame, app: &mut NotebookApp, area: Rect) {
 }
 
 /// 构建新建笔记输入行
+#[allow(clippy::too_many_arguments)]
 fn build_adding_item(
     input: &str,
     cursor_pos: usize,
@@ -249,6 +252,7 @@ fn build_adding_item(
     ListItem::new(item_lines)
 }
 
+#[allow(clippy::too_many_arguments)]
 /// 构建重命名输入行
 fn build_rename_item(
     input: &str,
@@ -278,6 +282,7 @@ fn render_editor(f: &mut ratatui::Frame, app: &mut NotebookApp, area: Rect) {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 /// 渲染状态栏
 fn render_status_bar(f: &mut ratatui::Frame, app: &NotebookApp, area: Rect) {
     let et = EditorTheme::from(&app.theme);

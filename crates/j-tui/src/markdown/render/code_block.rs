@@ -9,6 +9,8 @@ use ratatui::text::{Line, Span};
 const CODE_BLOCK_RIGHT_PADDING: usize = 2;
 
 /// 渲染围栏代码块（撑满可用宽度 + 自动折行 + 前后空行）
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_lines)]
 pub fn render_code_block(
     lang: &str,
     code: &str,

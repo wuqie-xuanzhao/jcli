@@ -17,6 +17,7 @@ use ratatui::{
 
 impl MarkdownEditor {
     /// 渲染编辑器
+    #[allow(clippy::too_many_lines)]
     pub fn render(&mut self, f: &mut Frame<'_>, area: Rect) {
         // 计算可用内容区域
         let content_height = area.height.saturating_sub(3) as usize; // 边框 + 状态栏
@@ -359,6 +360,7 @@ impl MarkdownEditor {
     ///  3. X = area.x + 1 (左边框) + line_num_width + 锚点列在视觉行内的显示宽度
     ///
     /// 若信息不足以定位（首次渲染、anchor 不在视口等），fall back 到默认底部位置。
+    #[allow(clippy::too_many_lines)]
     fn compute_insert_popup_position(
         &self,
         area: Rect,
@@ -450,6 +452,8 @@ impl MarkdownEditor {
     /// `is_insert`:
     ///  - false: Normal 模式触发的命令面板（COMMANDS）
     ///  - true:  Insert 模式触发（INSERT_COMMANDS），仅 image / `/`
+    #[allow(clippy::too_many_lines)]
+    #[allow(clippy::too_many_arguments)]
     fn render_command_popup(
         &mut self,
         f: &mut Frame<'_>,
@@ -654,6 +658,7 @@ impl MarkdownEditor {
     }
 
     /// 渲染帮助页面（全屏覆盖编辑区域）
+    #[allow(clippy::too_many_lines)]
     fn render_help_popup(&mut self, f: &mut Frame<'_>, area: Rect) {
         let accent = self.theme.md_h1;
         let bg = self.theme.bg_primary;

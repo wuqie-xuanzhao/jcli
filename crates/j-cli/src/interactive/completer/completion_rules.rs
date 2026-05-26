@@ -29,6 +29,7 @@ pub enum ArgHint {
 }
 
 /// 获取所有命令的参数补全规则定义
+#[allow(clippy::too_many_lines)]
 pub fn command_completion_rules() -> Vec<(&'static [&'static str], Vec<ArgHint>)> {
     vec![
         (

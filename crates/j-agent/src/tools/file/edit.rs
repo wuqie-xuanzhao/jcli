@@ -189,6 +189,7 @@ impl Tool for EditFileTool {
         schema_to_tool_params::<EditFileParams>()
     }
 
+    #[allow(clippy::too_many_lines)]
     fn execute(&self, arguments: &str, _cancelled: &Arc<AtomicBool>) -> ToolResult {
         let params: EditFileParams = match parse_tool_args(arguments) {
             Ok(p) => p,

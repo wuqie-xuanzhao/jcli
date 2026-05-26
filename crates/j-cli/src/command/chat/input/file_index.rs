@@ -155,6 +155,7 @@ impl FileIndex {
     }
 
     /// 后台扫描循环：定期检查 needs_refresh 标记，触发重新扫描
+    #[allow(clippy::too_many_arguments)]
     fn background_scan_loop(
         files: Arc<Mutex<Vec<String>>>,
         last_scan: Arc<Mutex<Instant>>,

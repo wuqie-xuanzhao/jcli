@@ -259,6 +259,7 @@ fn convert_alignment(a: pulldown_cmark::Alignment) -> Alignment {
 // ---------------------------------------------------------------------------
 
 /// 将 Markdown 文本解析为平台无关的 IR 文档结构。
+#[allow(clippy::too_many_lines)]
 pub fn parse_markdown(md: &str) -> ParsedDocument {
     // 预处理：表格分隔行修复（通用 GFM 兼容性）
     let md_owned;

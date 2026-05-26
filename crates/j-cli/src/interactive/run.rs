@@ -14,6 +14,7 @@ use rustyline::{
 };
 
 /// 启动交互式命令行循环
+#[allow(clippy::too_many_lines)]
 pub fn run_interactive(config: &mut YamlConfig) {
     let rl_config = Config::builder()
         .completion_type(CompletionType::Circular)

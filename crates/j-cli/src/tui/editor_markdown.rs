@@ -133,6 +133,7 @@ fn build_editor_opts<'a>(
 }
 
 /// 打开 Markdown 编辑器（在已有终端上）
+#[allow(clippy::too_many_arguments)]
 pub fn open_markdown_editor_on_terminal(
     terminal: &mut ratatui::Terminal<ratatui::backend::CrosstermBackend<io::Stdout>>,
     title: &str,
@@ -159,6 +160,7 @@ pub fn open_markdown_editor(
 
 /// 使用指定内容打开编辑器，可指定初始光标策略
 ///
+#[allow(clippy::too_many_arguments)]
 /// 用于需要特殊光标定位的场景（如 report 编辑需要光标在末尾）
 pub fn open_markdown_editor_with_cursor_policy(
     title: &str,

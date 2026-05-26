@@ -122,6 +122,7 @@ impl SearchState {
     ///
     /// `line` 可能是视觉行片段（折行后的子串），`char_offset` 是该片段
     /// 在逻辑行中的字符起始偏移，用于将匹配坐标映射到片段内坐标。
+    #[allow(clippy::too_many_arguments)]
     pub fn highlight_line(
         &self,
         line_idx: usize,

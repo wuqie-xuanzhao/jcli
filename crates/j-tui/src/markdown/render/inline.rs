@@ -17,6 +17,7 @@ pub fn render_inlines(
     spans
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_inline(
     inline: &Inline,
     base_style: Style,

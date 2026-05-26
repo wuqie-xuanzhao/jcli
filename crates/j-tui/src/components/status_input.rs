@@ -31,6 +31,7 @@ pub struct StatusInputParams<'a> {
 ///
 /// 渲染一个带边框的单行输入框，标签在左侧，输入文本在中间，提示在右侧。
 /// 同时设置终端光标位置以支持光标闪烁。
+#[allow(clippy::too_many_arguments)]
 pub fn draw_status_input(
     f: &mut Frame,
     area: Rect,

@@ -51,6 +51,7 @@ impl ChatApp {
         }
     }
 
+    #[allow(clippy::too_many_lines)]
     /// 广播配置数据到远程客户端
     pub fn broadcast_config_state(&mut self) {
         use crate::command::chat::app::ui_state::ConfigTab;

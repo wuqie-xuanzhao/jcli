@@ -181,6 +181,7 @@ fn check_background_service(cmd: &str) -> Option<&'static str> {
 }
 
 /// 判断命令是否可能是长运行的服务/服务器进程
+#[allow(clippy::too_many_lines)]
 fn is_long_running_server(first: &str, tokens: &[String]) -> bool {
     // 直接的 server 命令
     if matches!(
@@ -399,6 +400,7 @@ fn split_at_background(cmd: &str) -> Vec<&str> {
     segments
 }
 
+#[allow(clippy::too_many_lines)]
 fn check_single_segment(segment: &str) -> Option<&'static str> {
     let first_cmd = split_at_pipe(segment);
     let tokens = shell_words(first_cmd);

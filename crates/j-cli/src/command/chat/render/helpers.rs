@@ -297,6 +297,7 @@ pub fn config_field_raw_value_global(app: &ChatApp, idx: usize) -> String {
 }
 
 /// 将用户输入的值写入 Global 配置页指定索引字段。
+#[allow(clippy::too_many_lines)]
 pub fn config_field_set_global(app: &mut ChatApp, idx: usize, value: &str) {
     let Some(field_name) = CONFIG_GLOBAL_FIELDS_TAB.get(idx) else {
         return;

@@ -41,6 +41,7 @@ pub fn execute_interactive_command(args: &[String], config: &mut YamlConfig) {
 }
 
 /// 从交互模式输入的参数解析出 SubCmd
+#[allow(clippy::too_many_lines)]
 pub fn parse_interactive_command(args: &[String]) -> ParseResult {
     if args.is_empty() {
         return ParseResult::NotFound;

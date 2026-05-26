@@ -68,6 +68,7 @@ fn build_help_lines(app: &ChatApp) -> Vec<Line<'static>> {
 
 /// 将屏幕坐标转换为 (全局行号, 行内字符偏移)
 /// 用于 Help 页面的鼠标选区
+#[allow(clippy::too_many_arguments)]
 pub fn help_screen_to_text_pos(
     screen_x: u16,
     screen_y: u16,

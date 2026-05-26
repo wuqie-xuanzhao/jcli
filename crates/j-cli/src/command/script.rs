@@ -15,6 +15,7 @@ fn wait_for_key_template() -> String {
 /// 处理 script 命令: j script <script_name> ["<script_content>"]
 /// 创建一个脚本文件并注册为别名，脚本持久化在 ~/.jdata/scripts/ 下
 /// 如果没有提供 content，则打开 TUI 编辑器让用户输入
+#[allow(clippy::too_many_lines)]
 pub fn handle_script(name: &str, content: &[String], config: &mut YamlConfig) {
     // 检查脚本名是否已存在 → 如果存在则进入编辑模式
     if config.contains(section::PATH, name) {

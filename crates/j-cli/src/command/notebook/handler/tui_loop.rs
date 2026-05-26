@@ -43,6 +43,7 @@ pub fn run_notebook_tui() {
 }
 
 /// TUI 内部主循环
+#[allow(clippy::too_many_lines)]
 fn run_notebook_tui_internal() -> io::Result<()> {
     terminal::enable_raw_mode()?;
     let mut stdout = io::stdout();

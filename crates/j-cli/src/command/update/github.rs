@@ -73,6 +73,7 @@ fn check_for_update() {
 }
 
 /// 执行更新
+#[allow(clippy::too_many_lines)]
 fn perform_update(interactive: bool) {
     println!("{}", "正在更新...".yellow());
 

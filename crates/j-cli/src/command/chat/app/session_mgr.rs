@@ -86,6 +86,7 @@ impl ChatApp {
         self.persisted_display_count = display.len();
     }
 
+    #[allow(clippy::too_many_lines)]
     /// 保存当前 session 的所有状态到磁盘
     pub fn save_session_state(&self) {
         let sid = &self.session_id;
@@ -248,6 +249,7 @@ impl ChatApp {
         snapshots
     }
 
+    #[allow(clippy::too_many_lines)]
     /// 从磁盘恢复当前 session_id 的所有状态
     pub fn restore_session_state(&mut self) {
         let sid = self.session_id.clone();

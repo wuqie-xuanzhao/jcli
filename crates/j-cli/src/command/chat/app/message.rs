@@ -24,6 +24,7 @@ impl ChatApp {
         self.send_message_internal(text);
     }
 
+    #[allow(clippy::too_many_lines)]
     /// 发送指定文本消息并启动 agent loop
     pub fn send_message_internal(&mut self, text: String) {
         // ★ PreSendMessage hook（同步，需要返回值来决定是否 abort / 修改 text）

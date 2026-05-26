@@ -15,6 +15,7 @@ use crate::command::chat::app::{ChatApp, ChatMode};
 use crate::util::text::{char_width, sanitize_single_line_text, wrap_text};
 
 /// 绘制输入框（支持多行、光标、@mention 高亮）
+#[allow(clippy::too_many_lines)]
 pub fn draw_input(f: &mut ratatui::Frame, area: Rect, app: &mut ChatApp) {
     let t = &app.ui.theme;
 
@@ -281,6 +282,7 @@ fn compute_cursor_col_in_line(
 }
 
 /// 构建一行中的 Span 片段
+#[allow(clippy::too_many_arguments)]
 fn build_line_segments(
     line_chars: &[char],
     char_offset: usize,

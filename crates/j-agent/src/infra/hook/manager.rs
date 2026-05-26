@@ -357,6 +357,7 @@ impl HookManager {
     ///
     /// **注意**：调用方应先用 `has_hooks_for()` 检查，再构建 HookContext 并调用此方法，
     /// 避免在没有 hook 注册时进行不必要的内存分配。
+    #[allow(clippy::too_many_lines)]
     pub fn execute(
         &self,
         event: HookEvent,

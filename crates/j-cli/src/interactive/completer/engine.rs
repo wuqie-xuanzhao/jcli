@@ -68,6 +68,8 @@ const ALL_NOTE_CATEGORIES: &[&str] = NOTE_CATEGORIES;
 impl Completer for CopilotCompleter {
     type Candidate = Pair;
 
+    #[allow(clippy::too_many_lines)]
+    #[allow(clippy::too_many_arguments)]
     fn complete(
         &self,
         line: &str,
@@ -421,6 +423,7 @@ impl CopilotHelper {
 impl Completer for CopilotHelper {
     type Candidate = Pair;
 
+    #[allow(clippy::too_many_arguments)]
     fn complete(
         &self,
         line: &str,

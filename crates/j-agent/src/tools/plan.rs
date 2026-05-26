@@ -74,6 +74,7 @@ impl Tool for EnterPlanModeTool {
         schema_to_tool_params::<EnterPlanModeParams>()
     }
 
+    #[allow(clippy::too_many_lines)]
     fn execute(&self, arguments: &str, _cancelled: &Arc<AtomicBool>) -> ToolResult {
         let params: EnterPlanModeParams =
             serde_json::from_str(arguments).unwrap_or(EnterPlanModeParams { description: None });
@@ -326,6 +327,7 @@ impl Tool for ExitPlanModeTool {
 
 impl ExitPlanModeTool {
     /// 主 agent 通过 ask_tx 通道审批
+    #[allow(clippy::too_many_lines)]
     fn execute_via_ask_tx(&self, plan_content: &str) -> ToolResult {
         // 通过 Ask 机制发送审批请求
         let (response_tx, response_rx) = mpsc::channel::<String>();

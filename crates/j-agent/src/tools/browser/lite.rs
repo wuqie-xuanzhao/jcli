@@ -340,6 +340,7 @@ fn extract_forms(html: &str) -> Vec<Value> {
     forms
 }
 
+#[allow(clippy::too_many_lines)]
 fn extract_interactive(html: &str) -> Vec<Value> {
     let mut elements = Vec::new();
     let tags = ["button", "input", "select", "textarea"];

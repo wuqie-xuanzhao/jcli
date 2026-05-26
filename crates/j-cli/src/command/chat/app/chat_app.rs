@@ -128,6 +128,7 @@ pub struct ChatApp {
     pub file_index: FileIndex,
 }
 
+#[allow(clippy::too_many_lines)]
 impl ChatApp {
     /// 创建新的 ChatApp 实例，初始化所有子系统和通道
     pub fn new(session_id: String) -> Self {

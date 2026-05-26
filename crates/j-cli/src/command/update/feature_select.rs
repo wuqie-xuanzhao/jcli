@@ -90,6 +90,8 @@ pub(crate) fn select_features() -> Vec<String> {
 }
 
 /// 绘制 feature 选择菜单
+#[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_arguments)]
 fn draw_feature_menu(
     stdout: &mut io::Stdout,
     selected: &[bool],

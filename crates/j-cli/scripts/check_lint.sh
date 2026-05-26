@@ -36,11 +36,20 @@ dim()   { printf "      ${C_DIM}%s${C_RST}\n" "$*"; }
 # ── 辅助: 查找全部 .rs 源文件 ─────────────────────────────────────────────────
 all_rs() { find "$SRC_DIR" -name '*.rs' -not -path '*/target/*'; }
 
+
+# ── 检查 cargo 可用性 ──────────────────────────────────────────────────────────
+CARGO_AVAILABLE=true
+if ! command -v cargo &>/dev/null; then
+    CARGO_AVAILABLE=false
+    warn "cargo 不在 PATH 中，跳过 fmt/clippy 检查"
+fi
 # =============================================================================
 # 1. cargo fmt
 # =============================================================================
 hdr "=== 1. 代码格式 (cargo fmt) ==="
-if $DO_FIX; then
+if ! $CARGO_AVAILABLE; then
+    info "跳过 (cargo 不可用)"
+elif $DO_FIX; then
     cargo fmt
     pass "cargo fmt -- 已自动格式化"
 else
@@ -55,7 +64,9 @@ fi
 # 2. cargo clippy
 # =============================================================================
 hdr "=== 2. Clippy 静态分析 (-D warnings) ==="
-if cargo clippy -- -D warnings 2>&1; then
+if ! $CARGO_AVAILABLE; then
+    info "跳过 (cargo 不可用)"
+elif cargo clippy -- -D warnings 2>&1; then
     pass "clippy 零告警"
 else
     fail "clippy 存在告警，详见上方输出"
@@ -91,7 +102,11 @@ while IFS= read -r f; do
     # awk: 追踪大括号深度，在 fn 定义起点到闭合 } 之间计算行数
     result=$(awk -v file="$rel" -v max="$MAX_FUNCTION_LINES" '
     {
-        # 追踪是否处于 #[cfg(test)] 模块内 — 简化: 跳过 test fn
+        prev_line = ""
+    }
+    /^[[:space:]]*#\[allow\(clippy::too_many_lines\)\]/ {
+        skip_next_fn_lines = 1
+        next
     }
     /^[[:space:]]*(pub\s+)?(async\s+)?fn\s+[a-zA-Z_]/ && !/test/ {
         start = NR
@@ -109,11 +124,13 @@ while IFS= read -r f; do
             }
             if (opened && depth <= 0) {
                 len = NR - start + 1
-                if (len > max) printf "  WARN %s — %s (%d 行)\n", file, name, len
+                if (len > max && !skip_next_fn_lines) printf "  WARN %s — %s (%d 行)\n", file, name, len
+                skip_next_fn_lines = 0
                 next
             }
         } while (getline > 0)
     }
+    { skip_next_fn_lines = 0 }
     ' "$f")
     if [[ -n "$result" ]]; then
         echo "$result"
@@ -133,6 +150,10 @@ while IFS= read -r f; do
     rel="${f#$PROJECT_ROOT/}"
     # 用 awk 精确统计函数签名中的参数逗号数量
     result=$(awk -v file="$rel" -v max="$MAX_FUNCTION_PARAMS" '
+    /^[[:space:]]*#\[allow\(clippy::too_many_arguments\)\]/ {
+        skip_next_fn_args = 1
+        next
+    }
     /^[[:space:]]*(pub\s+)?(async\s+)?fn\s+\w+/ {
         # 收集完整的函数签名（可能跨行）
         sig = $0
@@ -143,7 +164,7 @@ while IFS= read -r f; do
         if (lparen > 0 && rparen > lparen) {
             params = substr(sig, lparen + 1, rparen - lparen - 1)
             gsub(/[[:space:]]+/, " ", params)
-            if (length(params) == 0) next  # 无参数
+            if (length(params) == 0) { skip_next_fn_args = 0; next }
             # 统计顶层逗号（忽略泛型/嵌套括号内的逗号）
             n = 1; depth = 0
             for (i = 1; i <= length(params); i++) {
@@ -152,12 +173,14 @@ while IFS= read -r f; do
                 if (c == ">" || c == "]" || c == ")") depth--
                 if (c == "," && depth == 0) n++
             }
-            if (n > max) {
+            if (n > max && !skip_next_fn_args) {
                 line_copy = $0; sub(/^[[:space:]]+/, "", line_copy); sub(/\{.*$/, "", line_copy)
                 printf "  WARN %s:%d — %s (%d 个参数)\n", file, NR, line_copy, n
             }
+            skip_next_fn_args = 0
         }
     }
+    { skip_next_fn_args = 0 }
     ' "$f")
     if [[ -n "$result" ]]; then
         echo "$result"

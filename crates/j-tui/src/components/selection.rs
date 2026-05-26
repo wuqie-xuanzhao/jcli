@@ -58,6 +58,7 @@ pub(crate) struct SelectionStyle {
 /// - `skip_chars`: 开头跳过的字符数（如 Markdown 编辑器的行号，Chat UI 传 0）
 /// - `local_start` / `local_end`: 内容部分的字符偏移（0-based, exclusive end）
 /// - `sel_fg` / `sel_bg`: 选区的文字色和背景色
+#[allow(clippy::too_many_arguments)]
 pub fn rebuild_spans_with_selection(
     spans: &[Span<'static>],
     skip_chars: usize,
@@ -124,6 +125,7 @@ pub fn rebuild_spans_with_selection(
 }
 
 /// 将内容 span 按 `[local_start, local_end)` 选区范围分割并附加到 result。
+#[allow(clippy::too_many_arguments)]
 fn append_content_spans(
     chars: &[char],
     c_start: usize,

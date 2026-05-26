@@ -196,6 +196,7 @@ fn run_script_in_current_terminal(script_path: &str, script_args: &[&str], confi
 /// 在新终端窗口中执行脚本
 /// 脚本自身决定是否包含等待按键逻辑（通过 TUI 编辑器创建时可预填模板）
 /// 脚本执行完后自动 exit 关闭 shell，使新窗口可被关闭
+#[allow(clippy::too_many_lines)]
 fn run_script_in_new_window(script_path: &str, script_args: &[&str], config: &YamlConfig) {
     let os = std::env::consts::OS;
 

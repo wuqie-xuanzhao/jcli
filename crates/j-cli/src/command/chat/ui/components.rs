@@ -243,7 +243,7 @@ pub fn global_theme_row<'a>(name: &str, ctx: &GlobalRowCtx<'_>) -> Line<'a> {
 /// 并基于 quote_idx 做正弦偏移产生变体，保证每次启动略有不同
 /// 但不偏离主题基调。
 pub fn welcome_box<'a>(
-    width: u16,
+    #[allow(clippy::too_many_arguments)] width: u16,
     theme: &Theme,
     quote_idx: usize,
     show_quote: bool,
@@ -334,6 +334,7 @@ fn render_welcome_ascii_art(width: u16, theme: &Theme, quote_idx: usize) -> Vec<
 }
 
 /// 渲染带诗句的装饰框
+#[allow(clippy::too_many_lines)]
 fn render_welcome_quote_box(width: u16, theme: &Theme, quote_idx: usize) -> Vec<Line<'static>> {
     use super::palette;
     use unicode_width::UnicodeWidthStr;

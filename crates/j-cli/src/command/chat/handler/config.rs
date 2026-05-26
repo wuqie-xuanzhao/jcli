@@ -4,6 +4,7 @@ use crate::util::safe_lock;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 /// 配置模式按键处理（Tab 感知）
+#[allow(clippy::too_many_lines)]
 pub fn handle_config_mode(app: &mut ChatApp, key: KeyEvent) {
     if app.ui.config_editing {
         // 正在编辑某个字段

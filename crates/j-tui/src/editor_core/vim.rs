@@ -387,6 +387,7 @@ impl Vim {
         }
     }
 
+    #[allow(clippy::too_many_lines)]
     fn handle_normal_mode(&mut self, input: &Input, buffer: &mut TextBuffer) -> Transition {
         match input.key {
             Key::Char('i') => Transition::Mode(Mode::Insert),
@@ -577,6 +578,7 @@ impl Vim {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn handle_operator_mode(
         &mut self,
         input: &Input,

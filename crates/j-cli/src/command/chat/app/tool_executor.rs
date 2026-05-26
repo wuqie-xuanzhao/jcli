@@ -109,6 +109,7 @@ impl ToolExecutor {
         completed
     }
 
+    #[allow(clippy::too_many_lines)]
     /// 把所有 Executing 状态的工具放到后台线程执行
     pub fn execute_batch(&mut self, registry: &Arc<ToolRegistry>) {
         let tasks: Vec<(String, String, String)> = self
@@ -210,7 +211,7 @@ impl ToolExecutor {
             });
         }
     }
-
+    #[allow(clippy::too_many_lines)]
     /// 用户确认执行当前待处理工具 → 返回 Some(ChatMode) 表示需要切换模式
     pub fn execute_current(&mut self, registry: &Arc<ToolRegistry>) -> Option<ChatMode> {
         let idx = self.pending_tool_idx;

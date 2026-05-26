@@ -134,6 +134,7 @@ pub fn replace_last_n_lines(path: &Path, n: usize, new_content: &str) {
 }
 
 /// 从文件尾部读取最后 N 行（高效实现，不需要读取整个文件）
+#[allow(clippy::too_many_lines)]
 pub fn read_last_n_lines(path: &Path, n: usize) -> Vec<String> {
     let buffer_size: usize = crate::constants::REPORT_READ_BUFFER_SIZE; // 16KB
     let mut lines = Vec::new();

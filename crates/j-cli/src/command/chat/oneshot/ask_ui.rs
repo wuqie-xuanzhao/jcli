@@ -52,7 +52,9 @@ fn handle_ask_request(req: &AskRequest) {
     let _ = req.response_tx.send(response);
 }
 
+#[allow(clippy::too_many_lines)]
 /// 多选 UI
+#[allow(clippy::too_many_arguments)]
 fn handle_multi_select(
     q: &AskQuestion,
     title: &str,
@@ -148,6 +150,7 @@ fn handle_multi_select(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 /// 单选 UI
 fn handle_single_select(
     q: &AskQuestion,

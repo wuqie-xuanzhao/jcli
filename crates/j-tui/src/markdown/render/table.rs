@@ -7,6 +7,7 @@ use ratatui::text::{Line, Span};
 use super::inline::inline_display_width;
 
 /// 渲染表格
+#[allow(clippy::too_many_lines)]
 pub fn render_table(
     data: &TableData,
     alignments: &[j_md::Alignment],
@@ -221,6 +222,7 @@ pub fn render_table(
 
 /// 按显示宽度对 inline 元素列表折行。
 /// 返回每个子行的 (spans, 显示宽度)。
+#[allow(clippy::too_many_arguments)]
 pub fn wrap_cell_inlines(
     inlines: &[Inline],
     max_width: usize,
@@ -276,6 +278,7 @@ pub fn wrap_cell_inlines(
 }
 
 /// 将 inline 元素列表转换为 (text, style) 片段
+#[allow(clippy::too_many_arguments)]
 fn inlines_to_cell_pieces(
     inlines: &[Inline],
     base_style: Style,

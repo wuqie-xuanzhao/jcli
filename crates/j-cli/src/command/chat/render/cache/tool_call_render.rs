@@ -77,6 +77,7 @@ use write::render_write_call_request_expanded;
 // ──────────────────────────────────────────────────────────────
 
 /// 渲染工具调用请求消息
+#[allow(clippy::too_many_lines)]
 pub fn render_tool_call_request_msg(
     sender_name: Option<&str>,
     tool_calls: &[ToolCallItem],
@@ -317,7 +318,9 @@ pub fn render_tool_call_request_msg(
 // 2. render_specialized_tool_call — 展开模式专用渲染分发
 // ──────────────────────────────────────────────────────────────
 
+#[allow(clippy::too_many_lines)]
 /// 根据工具名称分发到专用展开渲染，返回 true 表示已渲染
+#[allow(clippy::too_many_arguments)]
 fn render_specialized_tool_call(
     tool_name: &str,
     arguments: &str,

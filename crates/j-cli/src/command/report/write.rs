@@ -474,6 +474,7 @@ fn ensure_week_boundary(params: EnsureWeekBoundaryParams<'_>) -> bool {
 }
 
 /// 更新配置文件（YAML + JSON）
+#[allow(clippy::too_many_arguments)]
 fn update_config_files(
     week_num: i32,
     last_day: &NaiveDate,
@@ -506,6 +507,7 @@ fn update_config_files(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 /// 静默更新配置文件（YAML + JSON），不输出 info
 fn update_config_files_silent(
     week_num: i32,

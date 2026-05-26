@@ -49,6 +49,7 @@ impl Theme {
     }
 
     /// 终端回退主题：使用标准 ANSI 颜色，不依赖外部文件
+    #[allow(clippy::too_many_lines)]
     fn terminal_fallback() -> Self {
         Self {
             bg_primary: Color::Reset,

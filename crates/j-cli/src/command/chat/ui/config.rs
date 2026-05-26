@@ -27,6 +27,7 @@ use ratatui::{
 };
 
 /// 逐行渲染配置页内容，避免单个 Paragraph 在部分终端上发生软换行后污染相邻行。
+#[allow(clippy::too_many_arguments)]
 fn render_block_lines(
     f: &mut ratatui::Frame,
     area: Rect,

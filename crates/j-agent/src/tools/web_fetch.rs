@@ -119,6 +119,7 @@ fn send_http_request(
 }
 
 /// 从 HTTP 响应提取文本内容（HTML → markdown/text，截断到 max_chars）
+#[allow(clippy::too_many_lines)]
 fn extract_text_from_response(
     response: reqwest::blocking::Response,
     params: &WebFetchParams,

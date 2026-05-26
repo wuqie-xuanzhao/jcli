@@ -86,6 +86,7 @@ pub(crate) fn draw_popup_list(
 }
 
 /// 绘制 @ 补全弹窗（输入区域上方浮动）
+#[allow(clippy::too_many_lines)]
 pub fn draw_at_popup(f: &mut ratatui::Frame, input_area: Rect, app: &ChatApp) {
     let t = &app.ui.theme;
     let filtered = get_filtered_all_items(app);

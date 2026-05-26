@@ -212,6 +212,7 @@ struct SelectUnitsParams<'a> {
 /// Stage 1: 保留最近 N 个 unit（时间保底）
 /// Stage 2: 保留豁免 ToolGroup（技能/任务保底）
 /// Stage 3: 按比例配额分配剩余预算
+#[allow(clippy::too_many_lines)]
 fn select_units(
     units: &[MessageUnit],
     messages: &[ChatMessage],
@@ -410,6 +411,8 @@ fn merged_placeholder(names: &[String]) -> ChatMessage {
 ///   个非 System unit 在 Stage 1 无条件保留
 /// - `exempt_tools`: 来自 `CompactConfig.micro_compact_exempt_tools`；含豁免工具的 ToolGroup
 ///   在 Stage 2 优先保留，保护 skill/task 等承载关键上下文的调用
+#[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_arguments)]
 pub fn select_messages(
     messages: &[ChatMessage],
     max_history_messages: usize,

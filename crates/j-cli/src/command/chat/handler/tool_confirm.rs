@@ -2,6 +2,7 @@ use crate::command::chat::app::{Action, AskAnswer, ChatApp, ChatMode, CursorDire
 use crossterm::event::{KeyCode, KeyEvent};
 
 /// 统一交互区域按键处理：选项式（↑↓ 选择，Enter 确认，Esc 拒绝/退出）
+#[allow(clippy::too_many_lines)]
 pub fn handle_tool_confirm_mode(app: &mut ChatApp, key: KeyEvent) {
     let is_ask = app.ui.tool_ask_mode;
 
@@ -165,6 +166,7 @@ pub fn handle_plan_approval_confirm_mode(app: &mut ChatApp, key: KeyEvent) {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 /// Ask 模式的结构化问答交互处理
 fn handle_ask_mode(app: &mut ChatApp, key: KeyEvent) {
     let total_questions = app.ui.tool_ask_questions.len();

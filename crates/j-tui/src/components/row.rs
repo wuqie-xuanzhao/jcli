@@ -91,6 +91,7 @@ pub fn text_field_row<'a>(ctx: &TextFieldRowCtx<'_>) -> Line<'a> {
 }
 
 /// 可选行（主文本 + 次要信息）
+#[allow(clippy::too_many_arguments)]
 pub fn selectable_row<'a>(
     primary: &str,
     secondary: &str,

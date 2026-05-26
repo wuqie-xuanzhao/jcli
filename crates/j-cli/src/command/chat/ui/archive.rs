@@ -12,6 +12,7 @@ use ratatui::{
 
 /// 绘制归档确认界面
 #[allow(clippy::vec_init_then_push)]
+#[allow(clippy::too_many_lines)]
 pub fn draw_archive_confirm(f: &mut ratatui::Frame, area: Rect, app: &ChatApp) {
     let t = &app.ui.theme;
     let et = EditorTheme::from(t);
@@ -136,6 +137,7 @@ pub fn draw_archive_confirm(f: &mut ratatui::Frame, area: Rect, app: &ChatApp) {
 
 /// 绘制归档列表界面
 #[allow(clippy::vec_init_then_push)]
+#[allow(clippy::too_many_lines)]
 pub fn draw_archive_list(f: &mut ratatui::Frame, area: Rect, app: &ChatApp) {
     let t = &app.ui.theme;
     let et = EditorTheme::from(t);

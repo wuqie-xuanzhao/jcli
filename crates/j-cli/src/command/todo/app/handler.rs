@@ -9,6 +9,7 @@ use crate::config::YamlConfig;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 /// 正常模式按键处理，返回 true 表示退出
+#[allow(clippy::too_many_lines)]
 pub fn handle_normal_mode(app: &mut TodoApp, key: KeyEvent) -> bool {
     if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c') {
         return true;
@@ -96,6 +97,7 @@ pub fn handle_normal_mode(app: &mut TodoApp, key: KeyEvent) -> bool {
     false
 }
 
+#[allow(clippy::too_many_lines)]
 /// 输入模式按键处理（添加/编辑通用，支持光标移动和行内编辑）
 pub fn handle_input_mode(app: &mut TodoApp, key: KeyEvent) {
     let char_count = app.input.chars().count();
@@ -255,6 +257,7 @@ pub fn handle_confirm_cancel_input(app: &mut TodoApp, key: KeyEvent, prev_mode: 
     }
 }
 
+#[allow(clippy::too_many_lines)]
 /// 命令面板按键处理
 pub fn handle_command_popup_mode(app: &mut TodoApp, key: KeyEvent) {
     let items = app.filtered_cmd_items();

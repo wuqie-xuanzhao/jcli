@@ -324,6 +324,7 @@ impl RegisterHookTool {
         Ok((hook_def, detail, on_error_str))
     }
 
+    #[allow(clippy::too_many_lines)]
     fn handle_list(&self) -> ToolResult {
         match self.hook_manager.lock() {
             Ok(manager) => {

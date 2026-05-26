@@ -128,6 +128,7 @@ pub(crate) fn render_thinking_block(reasoning: &str, ctx: &mut RenderContext<'_>
     }
 }
 
+#[allow(clippy::too_many_lines)]
 /// 渲染用户消息
 pub fn render_user_msg(
     content: &str,
@@ -255,6 +256,8 @@ pub fn render_user_msg(
 /// - `recipient_name`: 消息目标接收者名称。若非 None 则在 label 行显示 → Target。
 /// - `content`: 消息正文（不含 sender_name 前缀）
 /// - `display_hint`: 显示提示（Draft 表示内部思考，渲染为淡化样式）
+#[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_arguments)]
 pub fn render_assistant_msg(
     sender_name: Option<&str>,
     recipient_name: Option<&str>,

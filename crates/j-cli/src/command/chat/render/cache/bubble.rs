@@ -9,6 +9,7 @@ use crate::util::text::{char_width, display_width};
 ///
 /// 根据 `bubble_total_w` 在内容两侧填充背景色空格，并对超宽内容进行逐字符截断。
 /// 若内容以 `\x00IMG:` 开头，则渲染为纯背景行并在行末保留图片标记。
+#[allow(clippy::too_many_arguments)]
 pub fn wrap_md_line_in_bubble(
     md_line: Line<'static>,
     bubble_bg: Color,

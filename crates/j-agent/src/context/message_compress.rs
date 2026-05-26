@@ -72,6 +72,7 @@ fn is_tool_call_broadcast(content: &str) -> Option<(String, String)> {
 /// 压缩后的消息列表：
 /// - 自己的消息保留完整
 /// - 其他 agent 的 tool call：最近 threshold 条保留，较早的压缩为摘要
+#[allow(clippy::too_many_lines)]
 pub fn compress_other_agent_toolcalls(
     messages: &[ChatMessage],
     self_agent_name: &str,

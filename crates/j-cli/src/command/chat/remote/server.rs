@@ -103,6 +103,7 @@ fn extract_header<'a>(request: &'a str, header_name: &str) -> Option<&'a str> {
     None
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn handle_connection(
     stream: TcpStream,
     token: &str,
@@ -179,6 +180,7 @@ async fn handle_connection(
 }
 
 /// ECDH 密钥协商：返回派生的 AES-256 密钥，或 None 表示失败/超时
+#[allow(clippy::too_many_lines)]
 async fn perform_key_exchange(
     ws_tx: &mut futures::stream::SplitSink<tokio_tungstenite::WebSocketStream<TcpStream>, Message>,
     ws_rx: &mut futures::stream::SplitStream<tokio_tungstenite::WebSocketStream<TcpStream>>,
@@ -271,6 +273,7 @@ async fn perform_key_exchange(
     Some(aes_key)
 }
 
+#[allow(clippy::too_many_lines)]
 /// 处理 WebSocket 连接（含 ECDH 协商 + AES-256-GCM 加密通信）
 async fn handle_websocket(
     ws_stream: tokio_tungstenite::WebSocketStream<TcpStream>,

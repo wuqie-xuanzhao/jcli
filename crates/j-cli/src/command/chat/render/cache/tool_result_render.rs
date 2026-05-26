@@ -54,6 +54,7 @@ pub struct ToolResultRenderParams<'a> {
 }
 
 /// 渲染工具执行结果消息：展开时完整内容，折叠时只显示标签
+#[allow(clippy::too_many_lines)]
 pub fn render_tool_result_msg(params: &ToolResultRenderParams, lines: &mut Vec<Line<'static>>) {
     // 解构出局部变量，保持函数体不变
     let sender_name = params.sender_name;

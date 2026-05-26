@@ -184,6 +184,8 @@ impl Tool for PowerShellTool {
 impl PowerShellTool {
     /// 同步执行 PowerShell 命令：spawn → 轮询等待 → 收集输出
     /// 超过 SHELL_AUTO_BG_SECS 仍未结束时，自动将进程移交给 BackgroundManager
+    #[allow(clippy::too_many_lines)]
+    #[allow(clippy::too_many_arguments)]
     fn execute_sync(
         &self,
         command: &str,
@@ -434,6 +436,7 @@ impl PowerShellTool {
     }
 
     /// 在后台线程执行 PowerShell 命令，立即返回 task_id
+    #[allow(clippy::too_many_lines)]
     fn execute_background(
         &self,
         command: String,

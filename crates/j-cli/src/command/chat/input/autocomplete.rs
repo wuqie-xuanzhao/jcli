@@ -209,6 +209,7 @@ pub fn get_filtered_all_items(app: &ChatApp) -> Vec<AtPopupItem> {
 }
 
 /// 为 @ 弹窗获取文件列表（使用 FileIndex 缓存）
+#[allow(clippy::too_many_lines)]
 fn get_filtered_files_for_at(app: &ChatApp, raw_filter: &str) -> Vec<String> {
     // 索引未就绪时返回空（后台线程仍在扫描）
     if !app.file_index.is_ready() {

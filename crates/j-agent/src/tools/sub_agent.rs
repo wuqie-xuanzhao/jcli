@@ -172,6 +172,7 @@ impl Tool for SubAgentTool {
         schema_to_tool_params::<AgentParams>()
     }
 
+    #[allow(clippy::too_many_lines)]
     fn execute(&self, arguments: &str, cancelled: &Arc<AtomicBool>) -> ToolResult {
         let params: AgentParams = match parse_tool_args(arguments) {
             Ok(p) => p,
@@ -411,6 +412,7 @@ impl Tool for SubAgentTool {
 /// - 不发送 StreamMsg（无 UI 交互）
 /// - 需要确认的工具通过 permission 检查：允许则执行，否则返回 "Tool denied"
 /// - 返回最终的 assistant 文本
+#[allow(clippy::too_many_lines)]
 fn run_sub_agent_loop(
     params: SubAgentLoopParams,
     cancelled: &Arc<AtomicBool>,

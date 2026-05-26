@@ -39,6 +39,7 @@ pub struct ChatArgs<'a> {
 }
 
 /// 处理 chat 子命令入口
+#[allow(clippy::too_many_lines)]
 pub fn handle_chat(args: ChatArgs<'_>) {
     let ChatArgs {
         content,

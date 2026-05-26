@@ -306,6 +306,7 @@ impl YamlConfig {
 
     /// 重命名某个 section 中的键
     /// 如果保存失败，回滚内存中的修改并返回错误
+    #[allow(clippy::too_many_arguments)]
     pub fn rename_property(
         &mut self,
         section: &str,

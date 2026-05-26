@@ -10,6 +10,7 @@ use ratatui::{
 };
 
 /// 构建带行内光标的 span 列表（单行）
+#[allow(clippy::too_many_arguments)]
 pub fn cursor_spans<'a>(
     value: &str,
     cursor: usize,
@@ -59,6 +60,7 @@ pub struct WrappedCursorLines {
 ///
 /// # Returns
 /// `WrappedCursorLines` 包含渲染行信息
+#[allow(clippy::too_many_arguments)]
 pub fn cursor_wrapped_lines(
     input: &str,
     cursor_pos: usize,

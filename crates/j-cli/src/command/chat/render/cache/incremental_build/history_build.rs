@@ -32,6 +32,7 @@ use crate::command::chat::render::cache::tool_result_render::{
 ///   返回 (消息起始行号映射, 按消息缓存, 流式渲染行, 流式稳定行缓存, 流式稳定偏移)
 ///   注意：当历史缓存有效时，调用方应使用 rebuild_streaming_only() 代替此函数
 #[allow(clippy::type_complexity)]
+#[allow(clippy::too_many_lines)]
 pub fn build_message_lines_incremental(
     app: &ChatApp,
     inner_width: usize,
@@ -128,6 +129,7 @@ struct HistoryBuildParams<'a> {
 }
 
 /// 构建历史消息渲染缓存（遍历所有消息）
+#[allow(clippy::too_many_lines)]
 /// 当历史缓存失效时调用，返回 (msg_start_lines, per_msg_cache)
 fn build_history_cache(params: &HistoryBuildParams<'_>) -> (Vec<(usize, usize)>, Vec<PerMsgCache>) {
     use crate::command::chat::storage::DisplayType;

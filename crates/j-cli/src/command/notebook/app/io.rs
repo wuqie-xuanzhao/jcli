@@ -245,6 +245,7 @@ fn read_note_content_or_new(path: &std::path::Path) -> (String, bool) {
 }
 
 /// 仅当内容变化时才写入文件；新文件（文件不存在）时始终写入
+#[allow(clippy::too_many_arguments)]
 fn save_if_changed(
     file_path: &std::path::Path,
     title: &str,

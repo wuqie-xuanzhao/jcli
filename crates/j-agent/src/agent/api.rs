@@ -14,6 +14,7 @@ pub fn create_llm_client(provider: &ModelProvider) -> LlmClient {
 }
 
 /// 将内部 ChatMessage 转换为 llm::Message 格式
+#[allow(clippy::too_many_lines)]
 pub fn to_llm_messages(messages: &[ChatMessage]) -> Vec<Message> {
     messages
         .iter()

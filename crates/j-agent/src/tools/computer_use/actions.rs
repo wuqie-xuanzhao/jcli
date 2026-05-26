@@ -258,6 +258,7 @@ end tell
         }
     }
 
+    #[allow(clippy::too_many_lines)]
     fn action_click(
         &self,
         v: &Value,
@@ -511,6 +512,7 @@ end tell
         }
     }
 
+    #[allow(clippy::too_many_lines)]
     fn action_drag(&self, v: &Value, _cancelled: &Arc<AtomicBool>) -> ToolResult {
         let (sx, sy) = if let Some(se) = v.get("start_element") {
             let sv = json!({"element": se});

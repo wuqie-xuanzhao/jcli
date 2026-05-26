@@ -45,6 +45,7 @@ pub struct CommandPopupConfig<'a> {
 ///
 /// 在主区域底部偏左位置渲染一个圆角边框的命令列表弹窗。
 /// 宽度根据内容自动计算。
+#[allow(clippy::too_many_lines)]
 pub fn draw_command_popup(f: &mut Frame, main_area: Rect, config: &CommandPopupConfig<'_>) {
     let item_count = config.items.len();
     if item_count == 0 {

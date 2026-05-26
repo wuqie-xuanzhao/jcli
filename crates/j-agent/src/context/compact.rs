@@ -342,6 +342,7 @@ pub struct AutoCompactParams<'a> {
 ///
 /// `invoked_skills`: 会话内已调用技能的共享状态，auto_compact 后将技能指令作为附件重新注入，
 /// 确保模型在压缩后仍能遵循正在执行的技能/工作流。
+#[allow(clippy::too_many_lines)]
 pub async fn auto_compact(
     messages: &mut Vec<ChatMessage>,
     params: &AutoCompactParams<'_>,

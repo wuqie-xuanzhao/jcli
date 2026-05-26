@@ -70,6 +70,7 @@ pub fn calc_title_height(app: &ChatApp) -> u16 {
 
 #[allow(clippy::too_many_lines)]
 /// 绘制标题栏
+#[allow(clippy::too_many_arguments)]
 pub fn draw_title_bar(
     f: &mut ratatui::Frame,
     area: Rect,

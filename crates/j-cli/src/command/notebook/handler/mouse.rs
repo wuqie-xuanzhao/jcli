@@ -19,6 +19,7 @@ pub struct MouseLayoutInfo {
 }
 
 /// 处理鼠标事件
+#[allow(clippy::too_many_arguments)]
 pub fn handle_mouse_event(
     app: &mut NotebookApp,
     mouse: MouseEvent,
@@ -54,6 +55,7 @@ fn rect_contains(area: Rect, col: u16, row: u16) -> bool {
     col >= area.x && col < area.x + area.width && row >= area.y && row < area.y + area.height
 }
 
+#[allow(clippy::too_many_arguments)]
 /// 处理左键点击
 fn handle_left_click(
     app: &mut NotebookApp,
@@ -156,6 +158,7 @@ fn handle_mouse_up(app: &mut NotebookApp) {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 /// 处理滚轮滚动
 fn handle_scroll(
     app: &mut NotebookApp,

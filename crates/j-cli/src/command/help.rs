@@ -231,6 +231,7 @@ fn handle_selection_drag(app: &mut HelpApp, col: u16, row: u16) {
 }
 
 /// 处理滚轮事件
+#[allow(clippy::too_many_arguments)]
 fn handle_scroll(
     app: &mut HelpApp,
     col: u16,

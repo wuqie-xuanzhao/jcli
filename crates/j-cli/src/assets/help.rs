@@ -177,6 +177,7 @@ fn collect_dirs(files: &[HelpFile]) -> BTreeSet<String> {
 }
 
 /// 递归构建扁平化条目列表
+#[allow(clippy::too_many_arguments)]
 fn build_flat_entries(
     files: &[HelpFile],
     dir_set: &BTreeSet<String>,

@@ -174,6 +174,7 @@ command_handlers! {
 /// 将 SubCmd 枚举变体转换为 Box<dyn CommandHandler>
 impl SubCmd {
     /// 将子命令转换为对应的命令处理器
+    #[allow(clippy::too_many_lines)]
     pub fn into_handler(self) -> Box<dyn CommandHandler> {
         match self {
             // 别名管理

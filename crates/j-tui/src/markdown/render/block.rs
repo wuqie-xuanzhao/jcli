@@ -244,6 +244,7 @@ fn render_rule(ctx: &RenderContext) -> Vec<Line<'static>> {
 
 /// 渲染图片占位符（当前 IR 不支持 Image block，暂不实现）
 #[allow(dead_code)]
+#[allow(clippy::too_many_arguments)]
 fn render_image_placeholder(
     url: &str,
     _alt: &str,

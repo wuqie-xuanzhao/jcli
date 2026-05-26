@@ -131,6 +131,7 @@ fn render_help(f: &mut ratatui::Frame, app: &TodoApp, area: ratatui::layout::Rec
 }
 
 /// 渲染列表区（含 inline 编辑）
+#[allow(clippy::too_many_lines)]
 fn render_list(f: &mut ratatui::Frame, app: &mut TodoApp, area: ratatui::layout::Rect) {
     let indices = app.filtered_indices();
     // 指针占 3 列（" ❯ " 或 "   "），加上边框 2 列
@@ -239,6 +240,7 @@ fn pointer_span(selected: bool, theme: &crate::theme::Theme) -> Span<'static> {
 /// 布局分三个独立 part：
 ///   pointer+checkbox | content（在自身列宽内折行）| date（固定宽度右对齐，仅首行）
 /// 内容折行宽度 = list_inner_width - checkbox_w - date_col_w
+#[allow(clippy::too_many_arguments)]
 fn build_normal_item(
     item: &super::app::TodoItem,
     list_inner_width: usize,
@@ -314,6 +316,7 @@ fn build_normal_item(
 }
 
 /// 构建 inline 编辑项（添加/编辑模式）
+#[allow(clippy::too_many_arguments)]
 fn build_editing_item(
     input: &str,
     cursor_pos: usize,
@@ -370,6 +373,7 @@ pub fn draw_command_popup(f: &mut ratatui::Frame, app: &mut TodoApp, main_area: 
     );
 }
 
+#[allow(clippy::too_many_lines)]
 /// 渲染状态栏
 fn render_status_bar(f: &mut ratatui::Frame, app: &TodoApp, area: ratatui::layout::Rect) {
     let et = EditorTheme::from(&app.theme);

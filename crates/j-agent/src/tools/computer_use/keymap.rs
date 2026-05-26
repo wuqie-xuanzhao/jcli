@@ -6,6 +6,7 @@ use super::error::AicError;
 pub type KeyCode = u16;
 
 /// Resolve a human-readable key name to a macOS virtual key code.
+#[allow(clippy::too_many_lines)]
 pub fn resolve_key(name: &str) -> Result<KeyCode, AicError> {
     let code = match name.to_lowercase().as_str() {
         // Letters

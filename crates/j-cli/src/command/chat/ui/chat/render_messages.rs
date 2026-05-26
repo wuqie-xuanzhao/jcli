@@ -20,6 +20,7 @@ const BUBBLE_WIDTH_PERCENT: usize = 85;
 const RENDER_VERSION: u32 = 2;
 
 /// 绘制消息列表区域，支持缓存增量渲染、图片加载和滚动定位
+#[allow(clippy::too_many_lines)]
 pub fn draw_messages(f: &mut ratatui::Frame, area: Rect, app: &mut ChatApp) {
     let t = &app.ui.theme;
     let block = Block::default()

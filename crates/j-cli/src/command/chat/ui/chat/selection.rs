@@ -39,6 +39,7 @@ pub(crate) fn get_line_at(
 
 /// 将屏幕坐标转换为 (全局行号, 行内字符偏移)
 /// 返回 None 表示点击在消息区域外、空白区域或不可选行（边框、label、空行等）
+#[allow(clippy::too_many_arguments)]
 pub fn screen_to_text_pos(
     screen_x: u16,
     screen_y: u16,

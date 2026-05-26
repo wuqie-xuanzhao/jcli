@@ -9,6 +9,7 @@ impl ChatApp {
     /// 2. 根据 Action 类型和当前状态执行相应操作
     /// 3. 修改 self.state、self.ui、self.tool_executor 等
     /// 4. 不再直接在 handler 中修改状态
+    #[allow(clippy::too_many_lines)]
     pub fn update(&mut self, action: Action) {
         match action {
             // ========== Chat 输入和文本编辑 ==========

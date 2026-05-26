@@ -326,6 +326,7 @@ impl Tool for EnterWorktreeTool {
 
 impl EnterWorktreeTool {
     /// 创建 worktree 并切换工作目录
+    #[allow(clippy::too_many_lines)]
     fn create_and_enter(&self, repo_root: &std::path::Path, slug: &str) -> ToolResult {
         let branch = format!("worktree-{}", slug);
         let wt_path = repo_root.join(".jcli").join("worktrees").join(slug);
@@ -536,6 +537,7 @@ impl ExitWorktreeTool {
     }
 
     /// 删除 worktree 并切回原目录
+    #[allow(clippy::too_many_lines)]
     fn handle_remove(
         &self,
         session: &WorktreeSession,

@@ -68,6 +68,7 @@ fn generate_session_id() -> String {
 }
 
 /// Chat TUI 主循环：初始化终端、会话状态，持续处理事件轮询、后台任务和渲染
+#[allow(clippy::too_many_lines)]
 pub fn run_chat_tui_internal(ws_bridge: Option<WsBridge>) -> io::Result<()> {
     // ── 初始化终端 ──────────────────────────────────────────────────────
     let (mut terminal, mut guard, mut mouse_capture_enabled) = terminal::init_terminal()?;
@@ -358,6 +359,7 @@ pub fn run_chat_tui_internal(ws_bridge: Option<WsBridge>) -> io::Result<()> {
 
 // ── Side-effects (editors) ──────────────────────────────────────────────
 
+#[allow(clippy::too_many_lines)]
 /// 处理全屏编辑器等需要临时离开 TUI 的操作。
 fn run_side_effects(
     app: &mut ChatApp,

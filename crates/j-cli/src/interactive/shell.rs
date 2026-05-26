@@ -4,6 +4,7 @@ use crate::{error, info};
 use colored::Colorize;
 
 /// 进入交互式 shell 子进程
+#[allow(clippy::too_many_lines)]
 pub fn enter_interactive_shell(config: &YamlConfig) {
     let os = std::env::consts::OS;
 

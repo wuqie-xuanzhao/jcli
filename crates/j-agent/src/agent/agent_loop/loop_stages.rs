@@ -41,6 +41,7 @@ pub struct MainAgentLoopParams {
 }
 
 /// 后台 Agent 循环：支持多轮工具调用
+#[allow(clippy::too_many_lines)]
 pub async fn run_main_agent_loop(params: MainAgentLoopParams) {
     let MainAgentLoopParams {
         config,

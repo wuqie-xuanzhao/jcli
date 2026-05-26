@@ -297,6 +297,7 @@ fn handle_char_input(app: &mut ChatApp, c: char) {
 }
 
 /// 检测光标是否在某个 mention 范围内，若是则激活对应的补全弹窗
+#[allow(clippy::too_many_lines)]
 fn check_and_activate_mention_popup(app: &mut ChatApp) {
     let text = app.ui.input_text();
     let chars: Vec<char> = text.chars().collect();

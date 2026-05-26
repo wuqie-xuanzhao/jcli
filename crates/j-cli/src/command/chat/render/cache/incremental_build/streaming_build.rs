@@ -82,6 +82,7 @@ pub fn rebuild_streaming_only(
 /// 流式气泡渲染核心逻辑
 /// 被本模块的 `rebuild_streaming_only` 和 `history_build::build_message_lines_incremental` 共享
 #[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_lines)]
 pub fn render_streaming_bubble(
     app: &ChatApp,
     bubble_max_width: usize,

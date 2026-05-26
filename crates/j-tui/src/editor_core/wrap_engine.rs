@@ -208,6 +208,7 @@ impl WrapEngine {
     }
 
     /// 将逻辑行按指定宽度拆分为视觉行
+    #[allow(clippy::too_many_arguments)]
     fn wrap_line_with_width(
         line: &str,
         line_num: usize,

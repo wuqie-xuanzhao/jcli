@@ -89,6 +89,7 @@ impl Tool for GrepTool {
         schema_to_tool_params::<GrepParams>()
     }
 
+    #[allow(clippy::too_many_lines)]
     fn execute(&self, arguments: &str, cancelled: &Arc<AtomicBool>) -> ToolResult {
         let params: GrepParams = match parse_tool_args(arguments) {
             Ok(p) => p,

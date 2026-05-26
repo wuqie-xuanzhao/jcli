@@ -136,6 +136,7 @@ impl MarkdownRenderer {
     /// - Insert 模式光标行：显示原始 Markdown 源码 + 光标
     /// - Normal 模式光标行：显示渲染后的 Markdown 效果 + 光标块
     /// - 非光标行：显示渲染后的 Markdown 效果（代码块围栏、表格、标题等）
+    #[allow(clippy::too_many_lines)]
     #[allow(clippy::too_many_arguments)]
     pub fn render_visual_line(
         &self,
@@ -236,6 +237,7 @@ impl MarkdownRenderer {
     ///
     /// 适用于非光标行和 Normal 模式的光标行。
     /// Normal 模式光标行的渲染结果会在上层叠加光标。
+    #[allow(clippy::too_many_lines)]
     #[allow(clippy::too_many_arguments)]
     fn render_non_insert_line(
         &self,
@@ -425,6 +427,7 @@ impl MarkdownRenderer {
     }
 
     /// 在 Normal 模式渲染后的行上叠加光标块
+    #[allow(clippy::too_many_arguments)]
     fn overlay_cursor_on_rendered_lines(
         &self,
         rendered_lines: Vec<Line<'static>>,

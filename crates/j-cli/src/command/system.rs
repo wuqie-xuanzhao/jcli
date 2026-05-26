@@ -132,6 +132,7 @@ pub fn handle_completion(shell_type: Option<&str>, config: &YamlConfig) {
 }
 
 /// 生成 zsh 补全脚本
+#[allow(clippy::too_many_lines)]
 fn generate_zsh_completion(config: &YamlConfig) {
     // 收集所有别名
     let mut all_aliases = Vec::new();
@@ -311,6 +312,7 @@ fn generate_zsh_completion(config: &YamlConfig) {
     print!("{}", script);
 }
 
+#[allow(clippy::too_many_lines)]
 /// 生成 bash 补全脚本
 fn generate_bash_completion(config: &YamlConfig) {
     // 收集所有别名

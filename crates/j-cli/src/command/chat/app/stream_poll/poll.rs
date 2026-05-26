@@ -14,6 +14,7 @@ use crate::command::chat::app::ui_state::ChatMode;
 impl ChatApp {
     /// 处理后台流式消息（在主循环中每帧调用）
     /// 返回需要通过 update() 分发的 Actions 列表
+    #[allow(clippy::too_many_lines)]
     pub fn poll_stream_actions(&mut self) -> Vec<Action> {
         let mut actions = Vec::new();
 

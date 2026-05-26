@@ -591,6 +591,7 @@ pub struct ToolExecContext<'a> {
 /// - 被拒绝/需要确认时返回拒绝消息
 /// - 正常执行时返回工具结果
 /// - 被取消时返回 [Cancelled]
+#[allow(clippy::too_many_lines)]
 pub fn execute_tool_with_permission(item: &ToolCallItem, ctx: &ToolExecContext) -> ChatMessage {
     if ctx.cancelled.load(Ordering::Relaxed) {
         return ChatMessage {
