@@ -4,5 +4,8 @@ mod impls;
 mod parse;
 mod types;
 
-// 公共类型 re-export——外部 `use crate::theme::{Theme, ThemeName}` 不受影响
+// Re-export BorderStyle related functions from j-tui
+pub use j_tui::editor_core::theme::init_border_style;
+
+// 公共类型 re-export
 pub use types::{Theme, ThemeName};

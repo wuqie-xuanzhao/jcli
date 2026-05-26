@@ -1,3 +1,4 @@
+use j_tui::editor_core::theme::BorderStyle;
 use ratatui::style::Color;
 use serde::Deserialize;
 
@@ -216,6 +217,7 @@ impl From<ThemeJson> for Theme {
             md_rule: j.md_rule.0,
             md_link: j.md_link.0,
             code_border: j.code_border.0,
+            code_border_style: BorderStyle::default(),
             code_bg: j.code_bg.0,
             code_default: j.code_default.0,
             code_keyword: j.code_keyword.0,

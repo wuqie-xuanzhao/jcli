@@ -92,7 +92,7 @@ fn handle_left_click(
     if let Some(list_area) = layout.list_area
         && rect_contains(list_area, col, row)
     {
-        app.focus = Focus::List;
+        app.focus = Focus::Tree;
 
         let inner_y = row.saturating_sub(list_area.y).saturating_sub(1);
         let max_visible = list_area.height.saturating_sub(2) as usize;

@@ -1,21 +1,37 @@
 //! 工具调用请求渲染：展开/折叠模式、各类工具专用渲染
-//!
-//! 本模块作为入口，负责：
-//! - `render_tool_call_request_msg` 主入口函数
-//! - `render_specialized_tool_call` 展开模式分发器
-//! - 共享的辅助渲染函数（`render_kv_line`、`render_tag_line` 等）
 
-mod agent;
-mod bash;
-mod description;
-mod file_tools;
-mod other_tools;
-mod specialized_tools;
+pub mod agent;
+pub mod ask;
+pub mod bash;
+pub mod browser;
+pub mod compact;
+pub mod computer_use;
+pub mod edit;
+pub mod enter_plan_mode;
+pub mod exit_plan_mode;
+pub mod glob;
+pub mod grep;
+pub mod ignore_message;
+pub mod load_skill;
+pub mod read;
+pub mod register_hook;
+pub mod send_message;
+pub mod shared;
+pub mod task;
+pub mod task_output;
+pub mod teammate;
+pub mod todo_read;
+pub mod todo_write;
+pub mod web_fetch;
+pub mod web_search;
+pub mod work_done;
+pub mod worktree;
+pub mod write;
 
 use crate::command::chat::constants::TOOL_ARG_PREVIEW_MAX_CHARS;
 use crate::command::chat::render::theme::ToolCategoryColor;
 use crate::command::chat::storage::ToolCallItem;
-use crate::command::chat::tools::classification::{ToolCategory, format_json_value};
+use crate::command::chat::tools::classification::ToolCategory;
 use crate::command::chat::tools::tool_names;
 use crate::util::text::{sanitize_single_line_text, wrap_text};
 use ratatui::{
@@ -27,37 +43,39 @@ use super::RenderContext;
 use super::msg_render::agent_name_color;
 use crate::command::chat::render::theme::Theme;
 
-// ── Re-export 公共 API ──
-// agent 模块导出的函数在折叠模式中也使用
-pub(crate) use agent::{extract_agent_args, extract_teammate_args};
-use agent::{
-    render_agent_call_request_expanded, render_exit_plan_mode_request,
-    render_teammate_call_request_expanded,
-};
-use bash::{extract_bash_args, render_bash_call_request_expanded};
-pub(crate) use description::extract_tool_description_from_args;
-use file_tools::{render_file_tool_call_request_expanded, render_glob_grep_call_request_expanded};
+use agent::{extract_agent_args, render_agent_call_request_expanded};
+use ask::render_ask_call_request_expanded;
+use bash::extract_bash_args;
+use browser::render_browser_call_request_expanded;
+use compact::render_compact_call_request_expanded;
 #[cfg(target_os = "macos")]
-use other_tools::render_computer_use_call_request_expanded;
-use other_tools::{
-    render_ask_call_request_expanded, render_compact_call_request_expanded,
-    render_enter_plan_mode_call_request_expanded, render_ignore_message_call_request_expanded,
-    render_load_skill_call_request_expanded, render_register_hook_call_request_expanded,
-    render_send_message_call_request_expanded, render_todo_read_call_request_expanded,
-    render_todo_write_call_request_expanded, render_work_done_call_request_expanded,
-    render_worktree_call_request_expanded,
-};
-use specialized_tools::{
-    render_browser_call_request_expanded, render_task_call_request_expanded,
-    render_task_output_call_request_expanded, render_web_fetch_call_request_expanded,
-    render_web_search_call_request_expanded,
-};
+use computer_use::render_computer_use_call_request_expanded;
+use edit::render_edit_call_request_expanded;
+use enter_plan_mode::render_enter_plan_mode_call_request_expanded;
+use exit_plan_mode::render_exit_plan_mode_request;
+use glob::render_glob_call_request_expanded;
+use grep::render_grep_call_request_expanded;
+use ignore_message::render_ignore_message_call_request_expanded;
+use load_skill::render_load_skill_call_request_expanded;
+use read::render_read_call_request_expanded;
+use register_hook::render_register_hook_call_request_expanded;
+use send_message::render_send_message_call_request_expanded;
+use shared::{extract_tool_description_from_args, render_json_params_enhanced};
+use task::render_task_call_request_expanded;
+use task_output::render_task_output_call_request_expanded;
+use teammate::{extract_teammate_args, render_teammate_call_request_expanded};
+use todo_read::render_todo_read_call_request_expanded;
+use todo_write::render_todo_write_call_request_expanded;
+use web_fetch::render_web_fetch_call_request_expanded;
+use web_search::render_web_search_call_request_expanded;
+use work_done::render_work_done_call_request_expanded;
+use worktree::render_worktree_call_request_expanded;
+use write::render_write_call_request_expanded;
 
 // ──────────────────────────────────────────────────────────────
 // 1. render_tool_call_request_msg (pub fn)
 // ──────────────────────────────────────────────────────────────
 
-/// 渲染工具调用请求消息的气泡内容
 pub fn render_tool_call_request_msg(
     sender_name: Option<&str>,
     tool_calls: &[ToolCallItem],
@@ -295,51 +313,7 @@ pub fn render_tool_call_request_msg(
 }
 
 // ──────────────────────────────────────────────────────────────
-// 2. render_json_params_enhanced
-// ──────────────────────────────────────────────────────────────
-
-/// 渲染 JSON 参数（增强版）
-pub(crate) fn render_json_params_enhanced(
-    json: &serde_json::Value,
-    max_width: usize,
-    lines: &mut Vec<Line<'static>>,
-    theme: &Theme,
-) {
-    if let Some(obj) = json.as_object() {
-        for (key, value) in obj {
-            let value_str = format_json_value(value);
-            let max_val_chars = max_width.saturating_sub(key.chars().count() + 7);
-
-            let value_display = if value_str.chars().count() > max_val_chars {
-                let truncated: String = value_str.chars().take(max_val_chars).collect();
-                format!("{}…", truncated)
-            } else {
-                value_str
-            };
-            let key = sanitize_single_line_text(key);
-            let value_display = sanitize_single_line_text(&value_display);
-
-            lines.push(Line::from(vec![
-                Span::styled("    ", Style::default()),
-                Span::styled(format!("{}:", key), Style::default().fg(theme.text_dim)),
-                Span::styled(" ", Style::default()),
-                Span::styled(value_display, Style::default().fg(theme.text_normal)),
-            ]));
-        }
-    } else {
-        // 非 JSON 对象，直接显示
-        let value_str = format_json_value(json);
-        for line in wrap_text(&value_str, max_width) {
-            lines.push(Line::from(vec![
-                Span::styled("    ", Style::default()),
-                Span::styled(line, Style::default().fg(theme.text_normal)),
-            ]));
-        }
-    }
-}
-
-// ──────────────────────────────────────────────────────────────
-// 3. render_specialized_tool_call — 展开模式专用渲染分发
+// 2. render_specialized_tool_call — 展开模式专用渲染分发
 // ──────────────────────────────────────────────────────────────
 
 /// 根据工具名称分发到专用展开渲染，返回 true 表示已渲染
@@ -354,7 +328,7 @@ fn render_specialized_tool_call(
     match tool_name {
         tool_names::SHELL => {
             if let Some(bash_args) = extract_bash_args(arguments) {
-                render_bash_call_request_expanded(&bash_args, bubble_max_width, lines, theme);
+                bash::render_bash_call_request_expanded(&bash_args, bubble_max_width, lines, theme);
                 return true;
             }
             false
@@ -377,12 +351,11 @@ fn render_specialized_tool_call(
             render_exit_plan_mode_request(bubble_max_width, lines, theme);
             true
         }
-        tool_names::GLOB | tool_names::GREP => {
-            render_glob_grep_call_request_expanded(tool_name, arguments, content_w, lines, theme)
-        }
-        tool_names::READ | tool_names::WRITE | tool_names::EDIT => {
-            render_file_tool_call_request_expanded(tool_name, arguments, content_w, lines, theme)
-        }
+        tool_names::GLOB => render_glob_call_request_expanded(arguments, content_w, lines, theme),
+        tool_names::GREP => render_grep_call_request_expanded(arguments, content_w, lines, theme),
+        tool_names::READ => render_read_call_request_expanded(arguments, content_w, lines, theme),
+        tool_names::WRITE => render_write_call_request_expanded(arguments, content_w, lines, theme),
+        tool_names::EDIT => render_edit_call_request_expanded(arguments, content_w, lines, theme),
         tool_names::TASK => render_task_call_request_expanded(arguments, content_w, lines, theme),
         tool_names::TASK_OUTPUT => {
             render_task_output_call_request_expanded(arguments, content_w, lines, theme)
@@ -430,62 +403,5 @@ fn render_specialized_tool_call(
             render_computer_use_call_request_expanded(arguments, content_w, lines, theme)
         }
         _ => false,
-    }
-}
-
-// ──────────────────────────────────────────────────────────────
-// 5. 共享辅助函数
-// ──────────────────────────────────────────────────────────────
-
-/// 将字符串截断到最大字符数，超出时加 "…"
-pub(crate) fn truncate_str(s: &str, max_chars: usize) -> String {
-    let s = sanitize_single_line_text(s);
-    if s.chars().count() <= max_chars {
-        s
-    } else {
-        let truncated: String = s.chars().take(max_chars).collect();
-        format!("{}…", truncated)
-    }
-}
-
-/// 渲染键值对行
-pub(crate) fn render_kv_line(
-    key: &str,
-    value: &str,
-    content_w: usize,
-    lines: &mut Vec<Line<'static>>,
-    theme: &Theme,
-) {
-    let key = sanitize_single_line_text(key);
-    let value = sanitize_single_line_text(value);
-    let max_val_chars = content_w.saturating_sub(key.chars().count() + 7);
-    let display = if value.chars().count() > max_val_chars {
-        format!("{}…", truncate_str(&value, max_val_chars))
-    } else {
-        value
-    };
-    for wrapped in wrap_text(&display, content_w) {
-        lines.push(Line::from(vec![
-            Span::styled("    ", Style::default()),
-            Span::styled(format!("{}:", key), Style::default().fg(theme.text_dim)),
-            Span::styled(" ", Style::default()),
-            Span::styled(wrapped, Style::default().fg(theme.text_normal)),
-        ]));
-    }
-}
-
-/// 渲染标签行（如 `[background]`、`[worktree]` 等）
-pub(crate) fn render_tag_line(
-    tag: &str,
-    content_w: usize,
-    lines: &mut Vec<Line<'static>>,
-    theme: &Theme,
-) {
-    let tag = sanitize_single_line_text(tag);
-    for wrapped in wrap_text(&tag, content_w) {
-        lines.push(Line::from(vec![
-            Span::styled("    ", Style::default()),
-            Span::styled(wrapped, Style::default().fg(theme.text_dim)),
-        ]));
     }
 }

@@ -538,6 +538,9 @@ impl MarkdownEditor {
                 self.vim.set_mode(Mode::Normal);
                 self.rebuild_wrap_cache();
             }
+            Transition::Save => {
+                return EditorAction::Save(self.buffer.to_string());
+            }
         }
 
         EditorAction::Continue
@@ -825,8 +828,10 @@ impl MarkdownEditor {
 pub enum EditorAction {
     /// 继续编辑
     Continue,
-    /// 提交内容
+    /// 提交内容（保存并退出）
     Submit(String),
+    /// 保存内容但不退出
+    Save(String),
     /// 取消编辑
     Cancel,
 }

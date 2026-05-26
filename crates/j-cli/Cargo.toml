@@ -1,6 +1,6 @@
 [package]
 name = "j-cli"
-version = "12.10.73"
+version = "12.10.80"
 edition = "2024"
 rust-version = "1.93.1"
 authors = ["lingojack@qq.com"]
@@ -21,8 +21,9 @@ name = "j"
 path = "src/main.rs"
 
 [dependencies]
-j-agent = { version = "12.10.73", path = "../j-agent" }
+j-agent = { version = "12.10.80", path = "../j-agent" }
 j-tui = { path = "../j-tui", features = ["image"] }
+j-md = { path = "../j-md", features = ["serde"] }
 clap = { version = "4", features = ["derive"] }
 rust-embed = { version = "8", features = ["include-exclude"] }
 rustyline = "17.0.2"
@@ -59,6 +60,8 @@ ignore = "0.4.25"
 notify = "7"
 regex = "1.12.3"
 tokio-tungstenite = "0.29"
+axum = "0.7"
+mime_guess = "2"
 qrcode = "0.14"
 rand = "0.8"
 uuid = { version = "1", features = ["v4"] }

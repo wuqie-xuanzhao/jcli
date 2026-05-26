@@ -175,7 +175,22 @@ pub mod config_key {
     pub const NOTEBOOK_EXPANDED_DIRS: &str = "notebook_expanded_dirs";
     /// 颜色色阶模式：auto / truecolor / ansi256 / ansi16 / none
     pub const COLOR_MODE: &str = "color_mode";
+    /// 代码块边框样式：rounded（圆角） / plain（直角）
+    pub const CODE_BLOCK_BORDER_STYLE: &str = "code_block_border_style";
 }
+
+/// 已知 config key 对应的合法 value 候选列表（用于自动补全）
+pub fn config_value_candidates(key: &str) -> Option<&'static [&'static str]> {
+    match key {
+        config_key::CODE_BLOCK_BORDER_STYLE => Some(&["rounded", "plain"]),
+        config_key::COLOR_MODE => Some(&["auto", "truecolor", "ansi256", "ansi16", "none"]),
+        _ => None,
+    }
+}
+
+/// setting 段中所有可配置的已知 key（用于自动补全，即使配置文件中尚未出现）
+pub const SETTING_KNOWN_KEYS: &[&str] =
+    &[config_key::CODE_BLOCK_BORDER_STYLE, config_key::COLOR_MODE];
 
 // ========== 搜索引擎 ==========
 
@@ -271,12 +286,15 @@ pub mod cmd {
     pub const LOCK: &[&str] = &["lock", "lk"];
     pub const UNLOCK: &[&str] = &["unlock", "uk"];
 
+    // 文件预览（Web UI）
+    pub const READ: &[&str] = &["read", "rd"];
+
     /// 获取所有内置命令关键字的扁平列表（用于判断别名冲突等）
     pub fn all_keywords() -> Vec<&'static str> {
         let groups: &[&[&str]] = &[
             SET, REMOVE, RENAME, MODIFY, TAG, UNTAG, LIST, CONTAIN, REPORT, REPORTCTL, CHECK,
             SEARCH, TODO, CHAT, SCRIPT, TIME, LOG, CONFIG, CLEAR, VERSION, HELP, EXIT, COMPLETION,
-            AGENT, SYSTEM, UPDATE, MD, NOTEBOOK, LOCK, UNLOCK,
+            AGENT, SYSTEM, UPDATE, MD, NOTEBOOK, LOCK, UNLOCK, READ,
         ];
         groups.iter().flat_map(|g| g.iter().copied()).collect()
     }
@@ -365,9 +383,6 @@ pub const WELCOME_MESSAGE: &str = r###"
 /// Shell 命令前缀字符
 pub const SHELL_PREFIX_EN: char = '!';
 pub const SHELL_PREFIX_CN: char = '！';
-
-/// 交互模式提示符
-pub const INTERACTIVE_PROMPT: &str = "j >";
 
 /// 历史记录文件名
 pub const HISTORY_FILE: &str = "history.txt";

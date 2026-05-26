@@ -4,6 +4,72 @@
 //! 使 editor_core 模块不依赖 chat 子系统。
 
 use ratatui::style::Color;
+use std::sync::OnceLock;
+
+static GLOBAL_BORDER_STYLE: OnceLock<BorderStyle> = OnceLock::new();
+
+/// 初始化全局边框样式（由 j-cli 在启动时调用）
+pub fn init_border_style(style: &str) {
+    let border_style = BorderStyle::from_config(style);
+    let _ = GLOBAL_BORDER_STYLE.set(border_style);
+}
+
+/// 获取当前生效的边框样式
+pub fn current_border_style() -> BorderStyle {
+    GLOBAL_BORDER_STYLE.get().copied().unwrap_or_default()
+}
+
+// 代码块边框样式
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum BorderStyle {
+    /// 圆角边框：╭╮╰╯
+    #[default]
+    Rounded,
+    /// 直角边框：┌┐└┘
+    Plain,
+}
+
+impl BorderStyle {
+    /// 从配置字符串解析边框样式
+    pub fn from_config(s: &str) -> Self {
+        match s {
+            "plain" => BorderStyle::Plain,
+            _ => BorderStyle::Rounded,
+        }
+    }
+
+    /// 获取左上角字符
+    pub const fn top_left(&self) -> &'static str {
+        match self {
+            BorderStyle::Rounded => "╭",
+            BorderStyle::Plain => "┌",
+        }
+    }
+
+    /// 获取右上角字符
+    pub const fn top_right(&self) -> &'static str {
+        match self {
+            BorderStyle::Rounded => "╮",
+            BorderStyle::Plain => "┐",
+        }
+    }
+
+    /// 获取左下角字符
+    pub const fn bottom_left(&self) -> &'static str {
+        match self {
+            BorderStyle::Rounded => "╰",
+            BorderStyle::Plain => "└",
+        }
+    }
+
+    /// 获取右下角字符
+    pub const fn bottom_right(&self) -> &'static str {
+        match self {
+            BorderStyle::Rounded => "╯",
+            BorderStyle::Plain => "┘",
+        }
+    }
+}
 
 /// 编辑器主题
 #[derive(Debug, Clone, PartialEq)]
@@ -44,6 +110,8 @@ pub struct EditorTheme {
 
     // ===== 代码块 =====
     pub code_border: Color,
+    /// 代码块边框样式：圆角或直角
+    pub code_border_style: BorderStyle,
 
     // ===== 表格 =====
     pub table_header: Color,

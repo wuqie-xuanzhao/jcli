@@ -56,6 +56,9 @@ pub fn open_markdown_editor_on_terminal(
                         return Ok((Some(content), editor.selected_theme_id()));
                     }
                     EditorAction::Cancel => return Ok((None, editor.selected_theme_id())),
+                    EditorAction::Save(_) => {
+                        // 保存但不退出，继续编辑
+                    }
                     EditorAction::Continue => {}
                 }
             } else if let Event::Mouse(mouse) = evt {

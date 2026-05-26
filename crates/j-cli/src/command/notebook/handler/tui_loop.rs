@@ -4,7 +4,7 @@
 
 use crate::command::notebook::app::{
     AppMode, FlatEntryKind, Focus, NotebookApp, handle_command_popup_mode, handle_confirm_delete,
-    handle_input_mode, handle_normal_mode, handle_ratio_input_mode,
+    handle_input_mode, handle_ratio_input_mode,
 };
 use crate::command::notebook::ui::draw_ui;
 use crate::error;
@@ -62,8 +62,38 @@ fn run_notebook_tui_internal() -> io::Result<()> {
                     match app.mode {
                         AppMode::Normal => {
                             match app.focus {
-                                Focus::List => {
-                                    if handle_normal_mode(&mut app, key) {
+                                Focus::Tree => {
+                                    // 内联 Normal 模式 Tree 焦点按键处理
+                                    match key.code {
+                                        KeyCode::Esc => {
+                                            if app.editor_dirty {
+                                                app.save_editor_content();
+                                            }
+                                            app.should_exit = true;
+                                        }
+                                        KeyCode::Up | KeyCode::Char('k') => {
+                                            app.move_up();
+                                        }
+                                        KeyCode::Down | KeyCode::Char('j') => {
+                                            app.move_down();
+                                        }
+                                        KeyCode::Enter => {
+                                            if let Some(entry) = app.selected_entry().cloned() {
+                                                match &entry.kind {
+                                                    FlatEntryKind::Dir { dir_path, .. } => {
+                                                        app.expanded_dirs.toggle(dir_path);
+                                                        super::super::app::io::save_expanded_dirs(&app.expanded_dirs);
+                                                        app.build_flat_entries();
+                                                    }
+                                                    FlatEntryKind::File { .. } => {
+                                                        app.focus = Focus::Editor;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        _ => {}
+                                    }
+                                    if app.should_exit {
                                         break;
                                     }
                                 }
@@ -85,16 +115,19 @@ fn run_notebook_tui_internal() -> io::Result<()> {
                                                     if app.editor_dirty {
                                                         app.save_editor_content();
                                                     }
-                                                    app.focus = Focus::List;
+                                                    app.focus = Focus::Tree;
                                                 }
                                                 crate::tui::editor_core::EditorAction::Submit(
                                                     _,
                                                 ) => {
                                                     app.save_editor_content();
-                                                    app.focus = Focus::List;
+                                                    app.focus = Focus::Tree;
                                                 }
                                                 crate::tui::editor_core::EditorAction::Cancel => {
-                                                    app.focus = Focus::List;
+                                                    app.focus = Focus::Tree;
+                                                }
+                                                crate::tui::editor_core::EditorAction::Save(_) => {
+                                                    app.save_editor_content();
                                                 }
                                             }
                                         } else {
@@ -109,10 +142,10 @@ fn run_notebook_tui_internal() -> io::Result<()> {
                                                     _,
                                                 ) => {
                                                     app.save_editor_content();
-                                                    app.focus = Focus::List;
+                                                    app.focus = Focus::Tree;
                                                 }
                                                 crate::tui::editor_core::EditorAction::Cancel => {
-                                                    app.focus = Focus::List;
+                                                    app.focus = Focus::Tree;
                                                 }
                                                 _ => {}
                                             }

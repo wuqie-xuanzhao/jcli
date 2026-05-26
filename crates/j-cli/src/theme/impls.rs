@@ -1,3 +1,4 @@
+use j_tui::editor_core::theme::BorderStyle;
 use ratatui::style::Color;
 
 use crate::assets::Assets;
@@ -132,6 +133,7 @@ impl Theme {
             md_rule: Color::DarkGray,
             md_link: Color::LightBlue,
             code_border: Color::DarkGray,
+            code_border_style: BorderStyle::default(),
             code_bg: Color::Reset,
             code_default: Color::Reset,
             code_keyword: Color::LightMagenta,

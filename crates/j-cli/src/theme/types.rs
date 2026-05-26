@@ -1,3 +1,4 @@
+use j_tui::editor_core::theme::BorderStyle;
 use ratatui::style::Color;
 
 // Re-export ThemeName from j-cli-core
@@ -217,6 +218,8 @@ pub struct Theme {
     // ===== 代码块 =====
     /// 代码块边框颜色
     pub code_border: Color,
+    /// 代码块边框样式：圆角或直角
+    pub code_border_style: BorderStyle,
     /// 代码块背景
     pub code_bg: Color,
     /// 代码默认文字颜色

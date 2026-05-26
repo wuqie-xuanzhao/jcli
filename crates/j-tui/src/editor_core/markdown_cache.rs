@@ -291,6 +291,7 @@ mod tests {
             md_inline_code_bg: Color::DarkGray,
             md_rule: Color::DarkGray,
             code_border: Color::DarkGray,
+            code_border_style: Default::default(),
             table_header: Color::White,
             table_body: Color::White,
             label_ai: Color::Green,

@@ -19,6 +19,10 @@ pub enum ArgHint {
     DynamicSectionKeys {
         section_arg_index: usize,
     },
+    /// 根据 key 名动态补全 value 的可选值（用于 config 命令第三个参数）
+    DynamicValueForkey {
+        key_arg_index: usize,
+    },
     Placeholder(&'static str),
     FilePath,
     None,
@@ -67,7 +71,7 @@ pub fn command_completion_rules() -> Vec<(&'static [&'static str], Vec<ArgHint>)
                 ArgHint::DynamicSectionKeys {
                     section_arg_index: 0,
                 },
-                ArgHint::Placeholder("<value>"),
+                ArgHint::DynamicValueForkey { key_arg_index: 1 },
             ],
         ),
         (cmd::REPORT, vec![ArgHint::Placeholder("<content>")]),
@@ -132,5 +136,12 @@ pub fn command_completion_rules() -> Vec<(&'static [&'static str], Vec<ArgHint>)
         (cmd::EXIT, vec![]),
         (cmd::UPDATE, vec![ArgHint::Fixed(vec!["--check"])]),
         (cmd::MD, vec![ArgHint::FilePath]),
+        (
+            cmd::READ,
+            vec![
+                ArgHint::Flags(vec!["--port", "--no-open"]),
+                ArgHint::FilePath,
+            ],
+        ),
     ]
 }
