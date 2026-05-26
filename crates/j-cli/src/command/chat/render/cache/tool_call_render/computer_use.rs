@@ -1,7 +1,5 @@
 //! ComputerUse 工具调用渲染
 
-
-
 /// ComputerUse 工具展开渲染
 #[cfg(target_os = "macos")]
 pub(crate) fn render_computer_use_call_request_expanded(

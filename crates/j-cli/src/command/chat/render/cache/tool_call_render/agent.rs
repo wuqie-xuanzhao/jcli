@@ -107,9 +107,8 @@ pub(crate) fn render_agent_call_request_expanded(
 }
 
 // ──────────────────────────────────────────────────────────────
-// TeammateCallArgs
-// ──────────────────────────────────────────────────────────────
-
+// TeammateCallArgs (预留，暂未接入)
+#[allow(dead_code)]
 /// Teammate 工具参数结构（用于渲染）
 pub(crate) struct TeammateCallArgs {
     pub name: String,
@@ -118,6 +117,7 @@ pub(crate) struct TeammateCallArgs {
     pub worktree: bool,
 }
 
+#[allow(dead_code)]
 /// 从 Teammate 工具的 arguments JSON 中提取参数
 pub(crate) fn extract_teammate_args(arguments: &str) -> Option<TeammateCallArgs> {
     let parsed = serde_json::from_str::<serde_json::Value>(arguments).ok()?;
@@ -135,7 +135,7 @@ pub(crate) fn extract_teammate_args(arguments: &str) -> Option<TeammateCallArgs>
             .unwrap_or(false),
     })
 }
-
+#[allow(dead_code)]
 /// 渲染 Teammate 工具调用请求的展开模式（边框 + name/role + prompt + 元信息）
 pub(crate) fn render_teammate_call_request_expanded(
     args: &TeammateCallArgs,
@@ -216,7 +216,7 @@ pub(crate) fn render_teammate_call_request_expanded(
 // ──────────────────────────────────────────────────────────────
 // ExitPlanMode
 // ──────────────────────────────────────────────────────────────
-
+#[allow(dead_code)]
 /// 渲染 ExitPlanMode 工具调用请求（边框显示）
 pub(crate) fn render_exit_plan_mode_request(
     bubble_max_width: usize,

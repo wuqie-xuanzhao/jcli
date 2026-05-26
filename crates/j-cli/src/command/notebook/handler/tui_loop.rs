@@ -99,7 +99,9 @@ fn run_notebook_tui_internal() -> io::Result<()> {
                                                 match &entry.kind {
                                                     FlatEntryKind::Dir { dir_path, .. } => {
                                                         app.expanded_dirs.toggle(dir_path);
-                                                        super::super::app::io::save_expanded_dirs(&app.expanded_dirs);
+                                                        super::super::app::io::save_expanded_dirs(
+                                                            &app.expanded_dirs,
+                                                        );
                                                         app.build_flat_entries();
                                                     }
                                                     FlatEntryKind::File { .. } => {

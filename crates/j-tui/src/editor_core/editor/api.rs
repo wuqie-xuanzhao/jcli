@@ -8,8 +8,8 @@ use crossterm::{
 use ratatui::{Terminal, backend::CrosstermBackend, layout::Rect};
 use std::io;
 
-use crate::editor_core::theme::{EditorTheme, HighlightFn};
 use super::{CursorPolicy, EDITOR_POLL_MS, EditorAction, MarkdownEditor, ThemeGalleryItem};
+use crate::editor_core::theme::{EditorTheme, HighlightFn};
 use crate::editor_core::vim::Input;
 
 /// Markdown 编辑器共享配置参数（封装 title/theme/highlight_fn/theme_gallery）

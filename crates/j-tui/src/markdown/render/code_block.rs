@@ -1,6 +1,6 @@
+use crate::editor_core::theme::current_border_style;
 use crate::markdown::highlight::highlight_code_line;
 use crate::markdown::theme::MdStyle;
-use crate::editor_core::theme::current_border_style;
 use crate::util::text::{display_width, wrap_text};
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};

@@ -7,8 +7,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SRC_DIR="$PROJECT_ROOT/src"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+SRC_DIR="$PROJECT_ROOT/crates"
 
 # ── 阈值配置 ──────────────────────────────────────────────────────────────────
 MAX_FILE_LINES=600          # 单文件超过此值 WARN
