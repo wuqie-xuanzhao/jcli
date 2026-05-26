@@ -424,9 +424,18 @@ fn window_preserves_time_order() {
     let result = select_messages(&msgs, 100, 0, 10, &[]);
 
     // 找出 A/B/C 在结果中的位置
-    let pos_a = result.iter().position(|m| m.content == "A").unwrap();
-    let pos_b = result.iter().position(|m| m.content == "B").unwrap();
-    let pos_c = result.iter().position(|m| m.content == "C").unwrap();
+    let pos_a = result
+        .iter()
+        .position(|m| m.content == "A")
+        .expect("should find position of message A in sorted results");
+    let pos_b = result
+        .iter()
+        .position(|m| m.content == "B")
+        .expect("should find position of message B in sorted results");
+    let pos_c = result
+        .iter()
+        .position(|m| m.content == "C")
+        .expect("should find position of message C in sorted results");
     assert!(pos_a < pos_b && pos_b < pos_c, "User 消息应保持时间顺序");
 }
 

@@ -78,7 +78,8 @@ fn test_schema_content_not_required() {
 #[test]
 fn test_schema_no_dangling_refs() {
     let schema = schema_to_tool_params::<TodoWriteParams>();
-    let schema_str = serde_json::to_string(&schema).unwrap();
+    let schema_str =
+        serde_json::to_string(&schema).expect("should serialize schema to JSON string");
     assert!(
         !schema_str.contains("\"$ref\""),
         "Schema should not contain any $ref after inlining, got: {}",
@@ -90,7 +91,8 @@ fn test_schema_no_dangling_refs() {
 #[test]
 fn test_merge_without_content_deserializes() {
     let json = r#"{"todos": [{"id": "1", "status": "completed"}], "merge": true}"#;
-    let params: TodoWriteParams = serde_json::from_str(json).unwrap();
+    let params: TodoWriteParams =
+        serde_json::from_str(json).expect("should deserialize merge params from JSON");
     assert!(params.merge);
     assert_eq!(params.todos.len(), 1);
     assert_eq!(params.todos[0].id, Some("1".to_string()));
@@ -102,7 +104,8 @@ fn test_merge_without_content_deserializes() {
 #[test]
 fn test_full_params_deserialize() {
     let json = r#"{"todos": [{"id": "1", "content": "implement feature", "status": "in_progress"}, {"content": "write tests"}], "merge": false}"#;
-    let params: TodoWriteParams = serde_json::from_str(json).unwrap();
+    let params: TodoWriteParams =
+        serde_json::from_str(json).expect("should deserialize full params from JSON");
     assert!(!params.merge);
     assert_eq!(params.todos.len(), 2);
     assert_eq!(params.todos[0].content, "implement feature");

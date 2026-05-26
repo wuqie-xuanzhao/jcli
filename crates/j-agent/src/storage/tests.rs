@@ -59,10 +59,34 @@ fn session_paths_construction() {
     let _tmp = TempDataDir::new();
     let paths = SessionPaths::new("abc");
     assert_eq!(paths.id(), "abc");
-    assert_eq!(paths.dir().file_name().unwrap(), "abc");
-    assert_eq!(paths.transcript().file_name().unwrap(), "transcript.jsonl");
-    assert_eq!(paths.meta_file().file_name().unwrap(), "session.json");
-    assert!(paths.transcript().parent().unwrap().ends_with("abc"));
+    assert_eq!(
+        paths
+            .dir()
+            .file_name()
+            .expect("dir should have a file name"),
+        "abc"
+    );
+    assert_eq!(
+        paths
+            .transcript()
+            .file_name()
+            .expect("transcript file should have a file name"),
+        "transcript.jsonl"
+    );
+    assert_eq!(
+        paths
+            .meta_file()
+            .file_name()
+            .expect("meta file should have a file name"),
+        "session.json"
+    );
+    assert!(
+        paths
+            .transcript()
+            .parent()
+            .expect("transcript should have a parent directory")
+            .ends_with("abc")
+    );
 }
 
 #[test]
@@ -93,10 +117,11 @@ fn list_sessions_finds_sessions() {
     let _tmp = TempDataDir::new();
 
     let paths = SessionPaths::new("ls-test");
-    paths.ensure_dir().unwrap();
+    paths.ensure_dir().expect("should create session directory");
     let msg = ChatMessage::text(MessageRole::User, "list test");
-    let line = serde_json::to_string(&SessionEvent::msg(msg)).unwrap();
-    fs::write(paths.transcript(), format!("{}\n", line)).unwrap();
+    let line = serde_json::to_string(&SessionEvent::msg(msg))
+        .expect("should serialize session event to JSON");
+    fs::write(paths.transcript(), format!("{}\n", line)).expect("should write transcript file");
 
     let metas = list_sessions();
     assert_eq!(metas.len(), 1);
@@ -108,8 +133,8 @@ fn delete_session_removes_dir() {
     let _tmp = TempDataDir::new();
     let paths = SessionPaths::new("del-id");
 
-    paths.ensure_dir().unwrap();
-    fs::write(paths.transcript(), b"").unwrap();
+    paths.ensure_dir().expect("should create session directory");
+    fs::write(paths.transcript(), b"").expect("should write transcript file");
 
     assert!(delete_session("del-id"));
     assert!(!paths.dir().exists());
@@ -166,10 +191,11 @@ fn list_sessions_lazy_generates_meta() {
     let _tmp = TempDataDir::new();
 
     let paths = SessionPaths::new("lazy-gen");
-    paths.ensure_dir().unwrap();
+    paths.ensure_dir().expect("should create session directory");
     let msg = ChatMessage::text(MessageRole::User, "lazy generation test");
-    let line = serde_json::to_string(&SessionEvent::msg(msg)).unwrap();
-    fs::write(paths.transcript(), format!("{}\n", line)).unwrap();
+    let line = serde_json::to_string(&SessionEvent::msg(msg))
+        .expect("should serialize session event to JSON");
+    fs::write(paths.transcript(), format!("{}\n", line)).expect("should write transcript file");
 
     assert!(!paths.meta_file().exists());
 
@@ -187,5 +213,11 @@ fn session_paths_transcripts_dir() {
     let _tmp = TempDataDir::new();
     let paths = SessionPaths::new("tx-test");
     assert!(paths.transcripts_dir().ends_with(".transcripts"));
-    assert_eq!(paths.transcripts_dir().parent().unwrap(), paths.dir());
+    assert_eq!(
+        paths
+            .transcripts_dir()
+            .parent()
+            .expect("transcripts dir should have a parent"),
+        paths.dir()
+    );
 }

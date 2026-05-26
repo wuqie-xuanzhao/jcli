@@ -84,6 +84,7 @@ pub struct ComputerUseTool {
 impl ComputerUseTool {
     pub const NAME: &'static str = "ComputerUse";
 
+    /// 创建新的 ComputerUseTool 实例
     pub fn new() -> Self {
         Self {
             som_state: Arc::new(Mutex::new(None)),

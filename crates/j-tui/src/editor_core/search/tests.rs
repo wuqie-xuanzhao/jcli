@@ -78,15 +78,21 @@ fn test_navigation() {
 
     search.search("aaa", &lines);
 
-    let m = search.current_match().unwrap();
+    let m = search
+        .current_match()
+        .expect("should have current match after search");
     assert_eq!(m.start, 0);
 
     search.next_match();
-    let m = search.current_match().unwrap();
+    let m = search
+        .current_match()
+        .expect("should have current match after next_match");
     assert_eq!(m.start, 8);
 
     search.prev_match();
-    let m = search.current_match().unwrap();
+    let m = search
+        .current_match()
+        .expect("should have current match after prev_match");
     assert_eq!(m.start, 0);
 }
 
@@ -98,12 +104,16 @@ fn test_search_chinese() {
     let count = search.search("你好", &lines);
     assert_eq!(count, 2);
 
-    let m = search.current_match().unwrap();
+    let m = search
+        .current_match()
+        .expect("should have current match for Chinese text");
     assert_eq!(m.start, 0);
     assert_eq!(m.end, 2);
 
     search.next_match();
-    let m = search.current_match().unwrap();
+    let m = search
+        .current_match()
+        .expect("should have current match after next_match in Chinese");
     assert_eq!(m.start, 5);
     assert_eq!(m.end, 7);
 }
@@ -147,7 +157,9 @@ fn test_highlight_chinese_correctness() {
     search.search("中文", &lines);
 
     assert_eq!(search.match_count(), 1);
-    let m = search.current_match().unwrap();
+    let m = search
+        .current_match()
+        .expect("should have current match for Chinese correctness");
     assert_eq!(m.start, 2);
     assert_eq!(m.end, 4);
 

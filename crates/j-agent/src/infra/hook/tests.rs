@@ -11,7 +11,7 @@ use std::sync::Arc;
 fn test_hook_event_roundtrip() {
     for event in HookEvent::all() {
         let s = event.as_str();
-        let parsed = HookEvent::parse(s).unwrap();
+        let parsed = HookEvent::parse(s).expect("should parse valid hook event string");
         assert_eq!(*event, parsed);
     }
 }
@@ -24,7 +24,7 @@ fn test_hook_event_from_str_invalid() {
 #[test]
 fn test_hook_def_default_timeout() {
     let yaml = r#"command: "echo hello""#;
-    let def: HookDef = serde_yaml::from_str(yaml).unwrap();
+    let def: HookDef = serde_yaml::from_str(yaml).expect("should parse HookDef from YAML string");
     assert_eq!(def.timeout, 10);
     assert_eq!(def.r#type, HookType::Bash);
 }
@@ -63,7 +63,9 @@ fn test_hook_def_to_hook_kind_llm() {
         on_error: OnError::Skip,
         filter: HookFilter::default(),
     };
-    let kind = def.into_hook_kind().unwrap();
+    let kind = def
+        .into_hook_kind()
+        .expect("should convert HookDef to HookKind::Llm");
     match kind {
         HookKind::Llm(llm) => {
             assert_eq!(llm.prompt, "检查敏感信息: {{user_input}}");
@@ -87,7 +89,9 @@ fn test_hook_def_llm_explicit_timeout() {
         on_error: OnError::Skip,
         filter: HookFilter::default(),
     };
-    let kind = def.into_hook_kind().unwrap();
+    let kind = def
+        .into_hook_kind()
+        .expect("should convert HookDef with explicit timeout");
     match kind {
         HookKind::Llm(llm) => {
             assert_eq!(llm.timeout, 60); // 显式设置的超时保留
@@ -105,7 +109,8 @@ model: gpt-4o
 timeout: 30
 retry: 2
 "#;
-    let def: HookDef = serde_yaml::from_str(yaml).unwrap();
+    let def: HookDef =
+        serde_yaml::from_str(yaml).expect("should parse HookDef from YAML with type field");
     assert_eq!(def.r#type, HookType::Llm);
     assert_eq!(def.prompt.as_deref(), Some("检查敏感信息"));
     assert_eq!(def.model.as_deref(), Some("gpt-4o"));
@@ -115,7 +120,8 @@ retry: 2
 
 #[test]
 fn test_hook_result_empty_json() {
-    let result: HookResult = serde_json::from_str("{}").unwrap();
+    let result: HookResult =
+        serde_json::from_str("{}").expect("should parse empty JSON as HookResult");
     assert!(!result.is_halt());
     assert!(result.messages.is_none());
     assert!(result.user_input.is_none());
@@ -125,14 +131,16 @@ fn test_hook_result_empty_json() {
 fn test_hook_result_with_stop() {
     // action=stop 中止当前步骤
     let json = r#"{"action": "stop"}"#;
-    let result: HookResult = serde_json::from_str(json).unwrap();
+    let result: HookResult =
+        serde_json::from_str(json).expect("should parse stop action JSON result");
     assert!(result.is_stop());
 }
 
 #[test]
 fn test_hook_result_with_action_stop() {
     let json = r#"{"action": "stop"}"#;
-    let result: HookResult = serde_json::from_str(json).unwrap();
+    let result: HookResult =
+        serde_json::from_str(json).expect("should parse action=stop HookResult");
     assert!(result.is_stop());
     assert!(!result.is_skip());
 }
@@ -140,7 +148,8 @@ fn test_hook_result_with_action_stop() {
 #[test]
 fn test_hook_result_with_action_skip() {
     let json = r#"{"action": "skip"}"#;
-    let result: HookResult = serde_json::from_str(json).unwrap();
+    let result: HookResult =
+        serde_json::from_str(json).expect("should parse action=skip HookResult");
     assert!(result.is_skip());
     assert!(!result.is_stop());
 }
@@ -148,7 +157,8 @@ fn test_hook_result_with_action_skip() {
 #[test]
 fn test_hook_result_with_user_input() {
     let json = r#"{"user_input": "[modified] hello"}"#;
-    let result: HookResult = serde_json::from_str(json).unwrap();
+    let result: HookResult =
+        serde_json::from_str(json).expect("should parse HookResult with user_input");
     assert_eq!(result.user_input.as_deref(), Some("[modified] hello"));
 }
 
@@ -159,7 +169,7 @@ fn test_hook_context_serialization() {
         user_input: Some("hello".to_string()),
         ..Default::default()
     };
-    let json = serde_json::to_string(&ctx).unwrap();
+    let json = serde_json::to_string(&ctx).expect("should serialize HookContext to JSON string");
     assert!(json.contains("pre_send_message"));
     assert!(json.contains("hello"));
     assert!(json.contains("user_input"));
@@ -184,7 +194,7 @@ fn test_execute_shell_hook_echo() {
         user_input: Some("original".to_string()),
         ..Default::default()
     };
-    let result = execute_shell_hook(&hook, &ctx).unwrap();
+    let result = execute_shell_hook(&hook, &ctx).expect("should execute shell hook successfully");
     assert_eq!(result.user_input.as_deref(), Some("hooked"));
     assert!(!result.is_halt());
 }
@@ -201,7 +211,8 @@ fn test_execute_shell_hook_empty_output() {
         dir_path: None,
     };
     let ctx = HookContext::default();
-    let result = execute_shell_hook(&hook, &ctx).unwrap();
+    let result =
+        execute_shell_hook(&hook, &ctx).expect("should execute shell hook with empty output");
     assert!(!result.is_halt());
     assert!(result.user_input.is_none());
 }
@@ -238,7 +249,7 @@ fn test_execute_shell_hook_reads_stdin() {
         user_input: Some("test".to_string()),
         ..Default::default()
     };
-    let result = execute_shell_hook(&hook, &ctx).unwrap();
+    let result = execute_shell_hook(&hook, &ctx).expect("should execute shell hook reading stdin");
     assert_eq!(result.user_input.as_deref(), Some("got_input"));
 }
 
@@ -259,7 +270,8 @@ fn test_execute_builtin_hook() {
         user_input: Some("original".to_string()),
         ..Default::default()
     };
-    let result = execute_hook_with_provider(&kind, &ctx, &None).unwrap();
+    let result =
+        execute_hook_with_provider(&kind, &ctx, &None).expect("should execute builtin hook");
     assert_eq!(result.user_input.as_deref(), Some("[hooked] original"));
 }
 
@@ -271,7 +283,8 @@ fn test_execute_builtin_hook_returns_none() {
     };
     let kind = HookKind::Builtin(builtin);
     let ctx = HookContext::default();
-    let result = execute_hook_with_provider(&kind, &ctx, &None).unwrap();
+    let result = execute_hook_with_provider(&kind, &ctx, &None)
+        .expect("should execute builtin hook returning None");
     assert!(!result.is_halt());
     assert!(result.user_input.is_none());
 }
@@ -315,7 +328,7 @@ fn test_hook_manager_session_hooks() {
             },
             &[],
         )
-        .unwrap();
+        .expect("should execute session hooks via manager");
     assert_eq!(result.user_input.as_deref(), Some("session_hooked"));
 }
 
@@ -344,7 +357,7 @@ fn test_hook_manager_builtin_hooks() {
             },
             &[],
         )
-        .unwrap();
+        .expect("should execute builtin hook via manager");
     assert_eq!(result.user_input.as_deref(), Some("[builtin] hello"));
 }
 
@@ -383,7 +396,7 @@ fn test_hook_manager_builtin_before_session() {
             },
             &[],
         )
-        .unwrap();
+        .expect("should execute builtin before session hook");
     // session hook 在 builtin 之后执行，覆盖了 builtin 的结果
     assert_eq!(result.user_input.as_deref(), Some("session_overridden"));
 }
@@ -454,7 +467,7 @@ fn test_hook_chain_execution() {
             },
             &[],
         )
-        .unwrap();
+        .expect("should execute hook chain via manager");
 
     // 最后一个 hook 的输出应该覆盖之前的
     assert_eq!(result.user_input.as_deref(), Some("second"));
@@ -500,7 +513,7 @@ fn test_hook_stop_stops_chain() {
             },
             &[],
         )
-        .unwrap();
+        .expect("should execute stop chain via manager");
 
     assert!(result.is_halt());
     assert!(result.user_input.is_none());
@@ -559,7 +572,7 @@ fn test_on_error_skip_continues_chain() {
             },
             &[],
         )
-        .unwrap();
+        .expect("should execute skip-and-continue chain");
 
     // 第二个 hook 应正常执行
     assert!(!result.is_halt());
@@ -607,7 +620,7 @@ fn test_on_error_stop_stops_chain() {
             },
             &[],
         )
-        .unwrap();
+        .expect("should execute stop-stops-chain via manager");
 
     assert!(result.is_halt());
     assert!(result.user_input.is_none());
@@ -618,7 +631,8 @@ fn test_on_error_default_is_skip() {
     // HookDef 不设 on_error 时，YAML 反序列化应默认为 skip
     let yaml = r#"command: "exit 1"
 timeout: 5"#;
-    let def: HookDef = serde_yaml::from_str(yaml).unwrap();
+    let def: HookDef =
+        serde_yaml::from_str(yaml).expect("should parse HookDef with default on_error");
     assert_eq!(def.on_error, OnError::Skip);
 }
 
@@ -627,12 +641,14 @@ fn test_on_error_yaml_parsing() {
     // 验证 on_error 字段能正确从 YAML 反序列化
     let yaml_skip = r#"command: "echo test"
 on_error: skip"#;
-    let def: HookDef = serde_yaml::from_str(yaml_skip).unwrap();
+    let def: HookDef =
+        serde_yaml::from_str(yaml_skip).expect("should parse on_error:skip from YAML");
     assert_eq!(def.on_error, OnError::Skip);
 
     let yaml_stop = r#"command: "echo test"
 on_error: stop"#;
-    let def: HookDef = serde_yaml::from_str(yaml_stop).unwrap();
+    let def: HookDef =
+        serde_yaml::from_str(yaml_stop).expect("should parse on_error:stop from YAML");
     assert_eq!(def.on_error, OnError::Stop);
 }
 
@@ -653,7 +669,8 @@ fn test_shell_hook_stderr_captured() {
         user_input: Some("test".to_string()),
         ..Default::default()
     };
-    let result = execute_shell_hook(&hook, &ctx).unwrap();
+    let result =
+        execute_shell_hook(&hook, &ctx).expect("should execute shell hook with stderr output");
     assert_eq!(result.user_input.as_deref(), Some("ok"));
 }
 
@@ -740,7 +757,8 @@ fn test_hook_entry_session_index() {
 fn test_switch_model_field_removed() {
     // 验证旧脚本返回 _switch_model 字段时不会报错（serde 静默忽略未知字段）
     let json = r#"{"user_input": "test", "_switch_model": "gpt-4"}"#;
-    let result: HookResult = serde_json::from_str(json).unwrap();
+    let result: HookResult =
+        serde_json::from_str(json).expect("should parse result with _switch_model field");
     assert_eq!(result.user_input.as_deref(), Some("test"));
 }
 
@@ -756,7 +774,7 @@ fn test_new_hook_events_roundtrip() {
         HookEvent::PostToolExecutionFailure,
     ] {
         let s = event.as_str();
-        let parsed = HookEvent::parse(s).unwrap();
+        let parsed = HookEvent::parse(s).expect("should parse new hook event strings");
         assert_eq!(event, parsed);
     }
 }
@@ -765,7 +783,8 @@ fn test_new_hook_events_roundtrip() {
 fn test_hook_result_retry_feedback() {
     // action=stop + retry_feedback
     let json = r#"{"action": "stop", "retry_feedback": "请修正敏感信息"}"#;
-    let result: HookResult = serde_json::from_str(json).unwrap();
+    let result: HookResult =
+        serde_json::from_str(json).expect("should parse HookResult with retry_feedback");
     assert!(result.is_stop());
     assert_eq!(result.retry_feedback.as_deref(), Some("请修正敏感信息"));
 }
@@ -774,7 +793,8 @@ fn test_hook_result_retry_feedback() {
 fn test_hook_result_action_stop_with_retry_feedback() {
     // 新字段 action=stop + retry_feedback
     let json = r#"{"action": "stop", "retry_feedback": "请修正敏感信息"}"#;
-    let result: HookResult = serde_json::from_str(json).unwrap();
+    let result: HookResult =
+        serde_json::from_str(json).expect("should parse action=stop with retry_feedback");
     assert!(result.is_stop());
     assert_eq!(result.retry_feedback.as_deref(), Some("请修正敏感信息"));
 }
@@ -782,7 +802,8 @@ fn test_hook_result_action_stop_with_retry_feedback() {
 #[test]
 fn test_hook_result_additional_context() {
     let json = r#"{"additional_context": "必须保留宪法规则"}"#;
-    let result: HookResult = serde_json::from_str(json).unwrap();
+    let result: HookResult =
+        serde_json::from_str(json).expect("should parse HookResult with additional_context");
     assert_eq!(
         result.additional_context.as_deref(),
         Some("必须保留宪法规则")
@@ -792,14 +813,16 @@ fn test_hook_result_additional_context() {
 #[test]
 fn test_hook_result_system_message() {
     let json = r#"{"system_message": "纠查官已审查"}"#;
-    let result: HookResult = serde_json::from_str(json).unwrap();
+    let result: HookResult =
+        serde_json::from_str(json).expect("should parse HookResult with system_message");
     assert_eq!(result.system_message.as_deref(), Some("纠查官已审查"));
 }
 
 #[test]
 fn test_hook_result_tool_error() {
     let json = r#"{"tool_error": "权限不足"}"#;
-    let result: HookResult = serde_json::from_str(json).unwrap();
+    let result: HookResult =
+        serde_json::from_str(json).expect("should parse HookResult with tool_error");
     assert_eq!(result.tool_error.as_deref(), Some("权限不足"));
 }
 
@@ -810,7 +833,7 @@ fn test_hook_context_new_fields() {
         tool_error: None,
         ..Default::default()
     };
-    let json = serde_json::to_string(&ctx).unwrap();
+    let json = serde_json::to_string(&ctx).expect("should serialize HookContext with new fields");
     assert!(json.contains("pre_auto_compact"));
     // skip_serializing_if 应跳过 None 字段
     assert!(!json.contains("tool_error"));
@@ -869,7 +892,7 @@ fn test_hook_filter_tool_name_priority_over_matcher() {
 #[test]
 fn test_hook_filter_tool_matcher_yaml() {
     let yaml = r#"tool_matcher: "Shell""#;
-    let filter: HookFilter = serde_yaml::from_str(yaml).unwrap();
+    let filter: HookFilter = serde_yaml::from_str(yaml).expect("should parse HookFilter from YAML");
     assert_eq!(filter.tool_matcher.as_deref(), Some("Shell"));
     assert!(filter.tool_name.is_none());
 }
@@ -924,13 +947,15 @@ fn test_extract_json_from_llm_output() {
 #[test]
 fn test_hook_type_yaml_parsing() {
     let yaml_bash = r#"command: "echo hello""#;
-    let def: HookDef = serde_yaml::from_str(yaml_bash).unwrap();
+    let def: HookDef =
+        serde_yaml::from_str(yaml_bash).expect("should parse HookDef as bash type from YAML");
     assert_eq!(def.r#type, HookType::Bash);
 
     let yaml_llm = r#"
 type: llm
 prompt: "check this""#;
-    let def: HookDef = serde_yaml::from_str(yaml_llm).unwrap();
+    let def: HookDef =
+        serde_yaml::from_str(yaml_llm).expect("should parse HookDef as llm type from YAML");
     assert_eq!(def.r#type, HookType::Llm);
     assert_eq!(def.prompt.as_deref(), Some("check this"));
 }

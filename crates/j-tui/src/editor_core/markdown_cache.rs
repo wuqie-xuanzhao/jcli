@@ -345,7 +345,7 @@ mod tests {
         let result = cache.get_rendered_line_for_source(0, &theme, 80);
         assert!(result.is_some());
 
-        let (line, is_first) = result.unwrap();
+        let (line, is_first) = result.expect("should have rendered line for source line 0");
         assert!(is_first); // First line of heading block
         assert!(!line.spans.is_empty());
     }

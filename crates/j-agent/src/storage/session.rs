@@ -28,11 +28,13 @@ pub struct SessionPaths {
 }
 
 impl SessionPaths {
+    /// 根据 session ID 创建 SessionPaths
     pub fn new(session_id: &str) -> Self {
         let dir = sessions_dir().join(session_id);
         Self { dir }
     }
 
+    /// 获取会话目录路径
     pub fn dir(&self) -> &Path {
         &self.dir
     }
@@ -152,6 +154,7 @@ impl SessionPaths {
         self.dir.join("metrics.json")
     }
 
+    /// 确保会话目录存在
     pub fn ensure_dir(&self) -> std::io::Result<()> {
         fs::create_dir_all(&self.dir)
     }

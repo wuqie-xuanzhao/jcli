@@ -22,6 +22,7 @@ impl Default for TodoManager {
 }
 
 impl TodoManager {
+    /// 创建新的 TodoManager 实例
     pub fn new() -> Self {
         // 优先使用 .jcli/todos.json，找不到则在 cwd 下创建 .jcli/todos.json
         let config_dir = JcliConfig::find_config_dir().or_else(JcliConfig::ensure_config_dir);
@@ -140,6 +141,7 @@ impl TodoManager {
         items.clone()
     }
 
+    /// 检查是否有待办或进行中的任务
     pub fn has_todos(&self) -> bool {
         let items = safe_lock(&self.items, "TodoManager::has_todos");
         items

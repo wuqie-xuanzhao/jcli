@@ -76,6 +76,7 @@ use write::render_write_call_request_expanded;
 // 1. render_tool_call_request_msg (pub fn)
 // ──────────────────────────────────────────────────────────────
 
+/// 渲染工具调用请求消息
 pub fn render_tool_call_request_msg(
     sender_name: Option<&str>,
     tool_calls: &[ToolCallItem],

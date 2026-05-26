@@ -405,6 +405,7 @@ pub struct FallbackResult {
 }
 
 impl FallbackResult {
+    /// 检查是否有工具调用结果
     pub fn has_tool_calls(&self) -> bool {
         self.tool_calls.is_some()
     }

@@ -512,7 +512,7 @@ fn renders_bold_text() {
     let all_spans: Vec<_> = lines.iter().flat_map(|l| l.spans.iter()).collect();
     let bold_span = all_spans.iter().find(|s| s.content.contains("bold"));
     assert!(bold_span.is_some(), "应有包含 'bold' 的 span");
-    let span = bold_span.unwrap();
+    let span = bold_span.expect("should find a bold span in rendered lines");
     assert!(
         span.style.add_modifier.contains(Modifier::BOLD),
         "'bold' span 应有 BOLD 修饰"
@@ -553,7 +553,14 @@ fn renders_inline_code() {
         .flat_map(|l| l.spans.iter())
         .find(|s| s.content.contains("cargo test"));
     assert!(code_span.is_some(), "应有包含 'cargo test' 的 span");
-    assert!(code_span.unwrap().style.bg.is_some(), "行内代码应有背景色");
+    assert!(
+        code_span
+            .expect("should find inline code span")
+            .style
+            .bg
+            .is_some(),
+        "行内代码应有背景色"
+    );
 }
 
 #[test]

@@ -137,6 +137,7 @@ impl Default for PlanModeState {
 }
 
 impl PlanModeState {
+    /// 创建新的 PlanModeState 实例
     pub fn new() -> Self {
         Self {
             inner: Mutex::new(PlanModeInner {

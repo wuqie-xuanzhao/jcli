@@ -41,16 +41,19 @@ impl Default for WorktreeState {
 }
 
 impl WorktreeState {
+    /// 创建新的 WorktreeState 实例
     pub fn new() -> Self {
         Self {
             session: Mutex::new(None),
         }
     }
 
+    /// 获取当前工作树会话
     pub fn get_session(&self) -> Option<WorktreeSession> {
         self.session.lock().ok()?.clone()
     }
 
+    /// 设置当前工作树会话
     pub fn set_session(&self, session: WorktreeSession) {
         if let Ok(mut s) = self.session.lock() {
             *s = Some(session);

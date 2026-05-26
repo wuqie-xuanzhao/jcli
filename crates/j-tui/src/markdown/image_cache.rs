@@ -49,6 +49,7 @@ impl Default for ImageCache {
 }
 
 impl ImageCache {
+    /// 创建新的图片缓存实例
     pub fn new() -> Self {
         let picker = if terminal_supports_graphics() {
             Picker::from_query_stdio().ok()

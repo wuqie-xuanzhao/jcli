@@ -40,6 +40,7 @@ impl LoadTool {
          Use this when you need a tool that is not currently available in your tool list. \
          The tool name must match exactly. After loading, the tool will be available in the next turn.";
 
+    /// 创建新的 LoadTool 实例
     pub fn new(
         deferred_tools: Arc<Mutex<Vec<String>>>,
         session_loaded_deferred: Arc<Mutex<Vec<String>>>,

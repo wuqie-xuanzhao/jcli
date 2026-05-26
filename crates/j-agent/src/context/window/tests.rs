@@ -120,7 +120,7 @@ fn test_placeholder_format() {
 
     let placeholder = result.iter().find(|m| m.content.contains("Previous: used"));
     assert!(placeholder.is_some());
-    let p = placeholder.unwrap();
+    let p = placeholder.expect("placeholder should be Some for previous context summary");
     assert!(p.content.contains(SHELL));
     assert!(p.content.contains(READ));
     assert!(p.tool_calls.is_none());

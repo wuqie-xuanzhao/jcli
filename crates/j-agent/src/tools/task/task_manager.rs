@@ -23,6 +23,7 @@ impl Default for TaskManager {
 }
 
 impl TaskManager {
+    /// 创建新的 TaskManager 实例
     pub fn new() -> Self {
         // 优先使用 .jcli/tasks/，找不到则在 cwd 下创建 .jcli/tasks/
         let config_dir = JcliConfig::find_config_dir().or_else(JcliConfig::ensure_config_dir);
@@ -81,6 +82,7 @@ impl TaskManager {
         self.tasks_dir.join(format!("task_{}.json", id))
     }
 
+    /// 创建新任务并持久化
     pub fn create_task(
         &self,
         title: &str,
@@ -112,6 +114,7 @@ impl TaskManager {
             .collect()
     }
 
+    /// 根据 ID 获取任务
     pub fn get_task(&self, id: u64) -> Result<AgentTask, String> {
         let path = self.task_path(id);
         if !path.exists() {
@@ -121,6 +124,7 @@ impl TaskManager {
         serde_json::from_str(&data).map_err(|e| format!("Failed to parse task: {}", e))
     }
 
+    /// 获取所有任务列表
     pub fn list_tasks(&self) -> Vec<AgentTask> {
         let mut tasks = Vec::new();
         if let Ok(entries) = fs::read_dir(&self.tasks_dir) {
@@ -138,6 +142,7 @@ impl TaskManager {
         tasks
     }
 
+    /// 更新指定任务的部分字段
     pub fn update_task(&self, id: u64, updates: &Value) -> Result<AgentTask, String> {
         let _lock = safe_lock(&self.write_lock, "TaskManager::update_task");
         let mut task = self.get_task(id)?;

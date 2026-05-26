@@ -66,7 +66,9 @@ fn test_empty_line() {
     engine.build_range(&lines, 0, lines.len());
 
     assert_eq!(engine.visual_line_count(), 2);
-    let vl = engine.get_visual_line(0).unwrap();
+    let vl = engine
+        .get_visual_line(0)
+        .expect("should have visual line 0");
     assert_eq!(vl.text, "");
     assert_eq!(vl.logical_line, 0);
 }

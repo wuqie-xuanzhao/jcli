@@ -144,11 +144,19 @@ fn queue_request_and_pop_fifo() {
     // FIFO 顺序
     let popped1 = queue.pop_pending();
     assert!(popped1.is_some(), "第一次 pop 应有结果");
-    assert_eq!(popped1.unwrap().confirm_msg, "first");
+    assert_eq!(
+        popped1.expect("first popped item should exist").confirm_msg,
+        "first"
+    );
 
     let popped2 = queue.pop_pending();
     assert!(popped2.is_some(), "第二次 pop 应有结果");
-    assert_eq!(popped2.unwrap().confirm_msg, "second");
+    assert_eq!(
+        popped2
+            .expect("second popped item should exist")
+            .confirm_msg,
+        "second"
+    );
 
     assert!(queue.pop_pending().is_none(), "第三次 pop 应为 None");
 }

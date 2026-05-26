@@ -17,6 +17,7 @@ pub struct SseStream {
 }
 
 impl SseStream {
+    /// 从 HTTP 响应创建 SSE 流
     pub fn new(response: reqwest::Response) -> Self {
         use futures::StreamExt;
         Self {

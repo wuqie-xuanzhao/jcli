@@ -42,6 +42,7 @@ pub struct PendingAgentPerm {
 }
 
 impl PendingAgentPerm {
+    /// 创建新的待决策权限请求
     pub fn new(
         agent_type: AgentType,
         name: String,
@@ -97,6 +98,7 @@ impl Default for PermissionQueue {
 }
 
 impl PermissionQueue {
+    /// 创建新的权限请求队列
     pub fn new() -> Self {
         Self {
             pending: Mutex::new(VecDeque::new()),
