@@ -4,10 +4,10 @@
 # 用法: bash scripts/check_lint.sh [--fix]  或  make check-lint
 #   --fix  自动执行 cargo fmt（默认仅报告）
 # =============================================================================
-set -euo pipefail
+set -eo pipefail 2>/dev/null || set -eo
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 SRC_DIR="$PROJECT_ROOT/crates"
 
 # ── 阈值配置 ──────────────────────────────────────────────────────────────────
