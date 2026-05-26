@@ -282,6 +282,7 @@ fn render_file_path_line(file_path: &str, theme: &Theme) -> Line<'static> {
 }
 
 /// 添加 Grep 统计行
+#[allow(clippy::too_many_arguments)]
 fn push_grep_summary(
     match_count: usize,
     file_count: usize,

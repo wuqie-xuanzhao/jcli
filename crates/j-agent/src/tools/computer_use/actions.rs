@@ -259,6 +259,7 @@ end tell
     }
 
     #[allow(clippy::too_many_lines)]
+    #[allow(clippy::too_many_arguments)]
     fn action_click(
         &self,
         v: &Value,

@@ -107,6 +107,7 @@ impl MarkdownCache {
     }
 
     /// 获取指定 Block 的渲染结果（懒渲染 + 缓存）
+    #[allow(clippy::too_many_arguments)]
     pub fn get_rendered_block(
         &mut self,
         block_idx: usize,
@@ -149,6 +150,7 @@ impl MarkdownCache {
     ///
     /// 返回 `(渲染行, 是否为该 Block 的首行)`。
     /// 首行用于判断是否需要显示 block 前缀（如 heading 的 ◆、list 的 •）。
+    #[allow(clippy::too_many_arguments)]
     pub fn get_rendered_line_for_source(
         &mut self,
         line_idx: usize,

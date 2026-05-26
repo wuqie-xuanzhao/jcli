@@ -724,6 +724,7 @@ pub fn run_teammate_loop(config: TeammateLoopConfig) -> String {
 /// - `{{.name}}` — teammate 名字
 /// - `{{.role}}` — teammate 角色
 /// - `{{.team_summary}}` — 团队成员列表摘要
+#[allow(clippy::too_many_arguments)]
 fn build_teammate_system_prompt(
     name: &str,
     role: &str,

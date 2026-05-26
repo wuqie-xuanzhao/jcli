@@ -211,6 +211,7 @@ impl Tool for ExitPlanModeTool {
         schema_to_tool_params::<ExitPlanModeParams>()
     }
 
+    #[allow(clippy::too_many_lines)]
     fn execute(&self, _arguments: &str, _cancelled: &Arc<AtomicBool>) -> ToolResult {
         if !self.plan_state.is_active() {
             return ToolResult {

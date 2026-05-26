@@ -15,6 +15,7 @@ use core_graphics::geometry::CGPoint;
 // - CFRelease: Releases a Core Foundation object; safe when called with a valid CF object
 //   that hasn't already been released.
 unsafe extern "C" {
+    #[allow(clippy::too_many_arguments)]
     fn CGEventCreateScrollWheelEvent(
         source: *const std::ffi::c_void,
         units: u32,
@@ -104,6 +105,7 @@ pub fn right_click(x: f64, y: f64) -> Result<(), AicError> {
 }
 
 /// Drag from one position to another.
+#[allow(clippy::too_many_arguments)]
 pub fn drag(x1: f64, y1: f64, x2: f64, y2: f64, duration_ms: u64) -> Result<(), AicError> {
     let start = CGPoint::new(x1, y1);
     let end = CGPoint::new(x2, y2);

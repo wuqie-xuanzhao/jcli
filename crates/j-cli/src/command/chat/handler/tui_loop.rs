@@ -361,6 +361,7 @@ pub fn run_chat_tui_internal(ws_bridge: Option<WsBridge>) -> io::Result<()> {
 
 #[allow(clippy::too_many_lines)]
 /// 处理全屏编辑器等需要临时离开 TUI 的操作。
+#[allow(clippy::too_many_arguments)]
 fn run_side_effects(
     app: &mut ChatApp,
     terminal: &mut ratatui::Terminal<ratatui::backend::CrosstermBackend<std::io::Stdout>>,

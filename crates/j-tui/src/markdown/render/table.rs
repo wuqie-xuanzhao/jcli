@@ -8,6 +8,7 @@ use super::inline::inline_display_width;
 
 /// 渲染表格
 #[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_arguments)]
 pub fn render_table(
     data: &TableData,
     alignments: &[j_md::Alignment],

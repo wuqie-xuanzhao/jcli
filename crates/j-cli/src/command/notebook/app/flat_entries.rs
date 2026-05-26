@@ -14,6 +14,7 @@ pub struct FlatEntriesContext<'a> {
 
 impl<'a> FlatEntriesContext<'a> {
     /// 从笔记列表、过滤集、目录集、展开目录创建上下文
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         notes: &'a [NoteItem],
         filtered_set: &'a HashSet<usize>,
@@ -30,6 +31,7 @@ impl<'a> FlatEntriesContext<'a> {
 }
 
 /// 递归构建扁平化条目列表
+#[allow(clippy::too_many_arguments)]
 pub fn build_flat_entries_recursive(
     ctx: FlatEntriesContext<'_>,
     prefix: &str,

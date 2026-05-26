@@ -33,6 +33,7 @@ use crate::command::chat::render::cache::tool_result_render::{
 ///   注意：当历史缓存有效时，调用方应使用 rebuild_streaming_only() 代替此函数
 #[allow(clippy::type_complexity)]
 #[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_arguments)]
 pub fn build_message_lines_incremental(
     app: &ChatApp,
     inner_width: usize,

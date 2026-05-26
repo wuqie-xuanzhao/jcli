@@ -336,6 +336,7 @@ impl HookManager {
 
     /// Fire-and-forget 执行：在后台线程中执行 hook，不阻塞调用方
     /// 适用于 PostSendMessage、SessionEnd 等不需要返回值的 hook
+    #[allow(clippy::too_many_arguments)]
     pub fn execute_fire_and_forget(
         manager: Arc<Mutex<HookManager>>,
         event: HookEvent,
@@ -358,6 +359,7 @@ impl HookManager {
     /// **注意**：调用方应先用 `has_hooks_for()` 检查，再构建 HookContext 并调用此方法，
     /// 避免在没有 hook 注册时进行不必要的内存分配。
     #[allow(clippy::too_many_lines)]
+    #[allow(clippy::too_many_arguments)]
     pub fn execute(
         &self,
         event: HookEvent,

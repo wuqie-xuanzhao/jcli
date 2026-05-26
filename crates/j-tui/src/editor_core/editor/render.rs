@@ -361,6 +361,7 @@ impl MarkdownEditor {
     ///
     /// 若信息不足以定位（首次渲染、anchor 不在视口等），fall back 到默认底部位置。
     #[allow(clippy::too_many_lines)]
+    #[allow(clippy::too_many_arguments)]
     fn compute_insert_popup_position(
         &self,
         area: Rect,

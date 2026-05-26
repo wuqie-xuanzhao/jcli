@@ -31,6 +31,7 @@ use crate::command::chat::render::cache::find_stable_boundary;
 /// 仅重建流式内容（历史缓存有效时使用）
 /// 避免遍历历史消息，直接复用旧缓存
 /// 返回 (streaming_lines, stable_lines, stable_offset)
+#[allow(clippy::too_many_arguments)]
 pub fn rebuild_streaming_only(
     app: &ChatApp,
     _inner_width: usize,

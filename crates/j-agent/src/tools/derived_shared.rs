@@ -158,6 +158,7 @@ impl SubAgentTracker {
     }
 
     /// 使用已分配的 id 注册子 Agent；返回 Handle 集合。
+    #[allow(clippy::too_many_arguments)]
     pub fn register_with_id(
         &self,
         id: String,

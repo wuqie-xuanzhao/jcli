@@ -83,6 +83,7 @@ impl TaskManager {
     }
 
     /// 创建新任务并持久化
+    #[allow(clippy::too_many_arguments)]
     pub fn create_task(
         &self,
         title: &str,

@@ -102,13 +102,17 @@ while IFS= read -r f; do
     # awk: 追踪大括号深度，在 fn 定义起点到闭合 } 之间计算行数
     result=$(awk -v file="$rel" -v max="$MAX_FUNCTION_LINES" '
     {
-        prev_line = ""
-    }
-    /^[[:space:]]*#\[allow\(clippy::too_many_lines\)\]/ {
-        skip_next_fn_lines = 1
-        next
+        # 滑动窗口: 保留最近 N 行 (N=10 足够覆盖 doc comment)
+        for (i = 1; i < 10; i++) ring[i] = ring[i+1]
+        ring[10] = $0
     }
     /^[[:space:]]*(pub\s+)?(async\s+)?fn\s+[a-zA-Z_]/ && !/test/ {
+        # 检查前 9 行是否有 #[allow(clippy::too_many_lines)]
+        skip = 0
+        for (i = 1; i <= 9; i++)
+            if (ring[i] ~ /#\[allow\(clippy::too_many_lines\)\]/) skip = 1
+        if (skip) next
+
         start = NR
         name = $0
         sub(/^[[:space:]]+/, "", name)
@@ -124,13 +128,11 @@ while IFS= read -r f; do
             }
             if (opened && depth <= 0) {
                 len = NR - start + 1
-                if (len > max && !skip_next_fn_lines) printf "  WARN %s — %s (%d 行)\n", file, name, len
-                skip_next_fn_lines = 0
+                if (len > max) printf "  WARN %s — %s (%d 行)\n", file, name, len
                 next
             }
         } while (getline > 0)
     }
-    { skip_next_fn_lines = 0 }
     ' "$f")
     if [[ -n "$result" ]]; then
         echo "$result"
@@ -150,11 +152,17 @@ while IFS= read -r f; do
     rel="${f#$PROJECT_ROOT/}"
     # 用 awk 精确统计函数签名中的参数逗号数量
     result=$(awk -v file="$rel" -v max="$MAX_FUNCTION_PARAMS" '
-    /^[[:space:]]*#\[allow\(clippy::too_many_arguments\)\]/ {
-        skip_next_fn_args = 1
-        next
+    {
+        # 滑动窗口: 保留最近 N 行 (N=10)
+        for (i = 1; i < 10; i++) ring[i] = ring[i+1]
+        ring[10] = $0
     }
     /^[[:space:]]*(pub\s+)?(async\s+)?fn\s+\w+/ {
+        # 检查前 9 行是否有 #[allow(clippy::too_many_arguments)]
+        skip = 0
+        for (i = 1; i <= 9; i++)
+            if (ring[i] ~ /#\[allow\(clippy::too_many_arguments\)\]/) skip = 1
+        if (skip) next
         # 收集完整的函数签名（可能跨行）
         sig = $0
         while (index(sig, ")") == 0 && getline > 0) sig = sig " " $0
@@ -164,7 +172,7 @@ while IFS= read -r f; do
         if (lparen > 0 && rparen > lparen) {
             params = substr(sig, lparen + 1, rparen - lparen - 1)
             gsub(/[[:space:]]+/, " ", params)
-            if (length(params) == 0) { skip_next_fn_args = 0; next }
+            if (length(params) == 0) next
             # 统计顶层逗号（忽略泛型/嵌套括号内的逗号）
             n = 1; depth = 0
             for (i = 1; i <= length(params); i++) {
@@ -173,14 +181,12 @@ while IFS= read -r f; do
                 if (c == ">" || c == "]" || c == ")") depth--
                 if (c == "," && depth == 0) n++
             }
-            if (n > max && !skip_next_fn_args) {
+            if (n > max) {
                 line_copy = $0; sub(/^[[:space:]]+/, "", line_copy); sub(/\{.*$/, "", line_copy)
                 printf "  WARN %s:%d — %s (%d 个参数)\n", file, NR, line_copy, n
             }
-            skip_next_fn_args = 0
         }
     }
-    { skip_next_fn_args = 0 }
     ' "$f")
     if [[ -n "$result" ]]; then
         echo "$result"

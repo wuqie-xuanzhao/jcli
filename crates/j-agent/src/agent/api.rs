@@ -268,6 +268,7 @@ fn sanitize_llm_messages(messages: &mut Vec<Message>) {
 }
 
 /// 构建带工具定义的请求
+#[allow(clippy::too_many_arguments)]
 pub fn build_request_with_tools(
     provider: &ModelProvider,
     messages: &[ChatMessage],

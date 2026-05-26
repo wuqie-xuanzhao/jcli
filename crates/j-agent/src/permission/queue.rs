@@ -43,6 +43,7 @@ pub struct PendingAgentPerm {
 
 impl PendingAgentPerm {
     /// 创建新的待决策权限请求
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         agent_type: AgentType,
         name: String,

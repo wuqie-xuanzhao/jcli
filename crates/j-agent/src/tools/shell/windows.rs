@@ -437,6 +437,7 @@ impl PowerShellTool {
 
     /// 在后台线程执行 PowerShell 命令，立即返回 task_id
     #[allow(clippy::too_many_lines)]
+    #[allow(clippy::too_many_arguments)]
     fn execute_background(
         &self,
         command: String,

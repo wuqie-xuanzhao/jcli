@@ -47,6 +47,7 @@ const DIGIT_BITMAPS: [[u8; 7]; 10] = [
 ];
 
 /// Draw a single digit at (x, y) with given scale and color
+#[allow(clippy::too_many_arguments)]
 fn draw_digit(img: &mut RgbaImage, digit: u8, x: i32, y: i32, scale: u32, color: Rgba<u8>) {
     if digit > 9 {
         return;
@@ -69,6 +70,7 @@ fn draw_digit(img: &mut RgbaImage, digit: u8, x: i32, y: i32, scale: u32, color:
 }
 
 /// Draw a number string at (x, y)
+#[allow(clippy::too_many_arguments)]
 fn draw_number(img: &mut RgbaImage, num: usize, x: i32, y: i32, scale: u32, color: Rgba<u8>) {
     let s = num.to_string();
     let mut cx = x;

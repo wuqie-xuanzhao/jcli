@@ -413,6 +413,7 @@ impl Tool for SubAgentTool {
 /// - 需要确认的工具通过 permission 检查：允许则执行，否则返回 "Tool denied"
 /// - 返回最终的 assistant 文本
 #[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_arguments)]
 fn run_sub_agent_loop(
     params: SubAgentLoopParams,
     cancelled: &Arc<AtomicBool>,

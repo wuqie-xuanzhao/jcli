@@ -228,6 +228,7 @@ fn matches_file_type(path: &Path, type_extensions: &[&str]) -> bool {
 }
 
 /// 在单个文件中搜索正则匹配，将结果写入 `results`
+#[allow(clippy::too_many_arguments)]
 fn search_single_file(
     path: &Path,
     re: &Regex,
@@ -277,6 +278,7 @@ fn search_single_file(
 }
 
 /// 构建单行 content 匹配结果（可选上下文行）
+#[allow(clippy::too_many_arguments)]
 fn build_content_line(
     path_str: &str,
     line_num: usize,
@@ -380,6 +382,7 @@ fn empty_result(pattern: &str, kind: &str) -> ToolResult {
 }
 
 /// 对列表分页并格式化输出（用于 files_with_matches / content 模式共用）
+#[allow(clippy::too_many_arguments)]
 fn paginate_and_format(
     header_fmt: &str,
     items: &[String],

@@ -538,6 +538,7 @@ impl ExitWorktreeTool {
 
     /// 删除 worktree 并切回原目录
     #[allow(clippy::too_many_lines)]
+    #[allow(clippy::too_many_arguments)]
     fn handle_remove(
         &self,
         session: &WorktreeSession,

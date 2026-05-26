@@ -58,6 +58,7 @@ impl BackgroundManager {
     /// 返回 task_id 和共享输出缓冲区的 Arc，调用方将 buffer 传给 reader 线程实现实时写入
     /// `is_thread_running`：线程类任务（如 SubAgent）可传入 Arc<AtomicBool> 用于存活检测；
     /// shell 后台任务传 None（通过 child_pid + pgrep 检测）
+    #[allow(clippy::too_many_arguments)]
     pub fn spawn_command(
         &self,
         command: &str,
@@ -91,6 +92,7 @@ impl BackgroundManager {
     /// 接管已运行中的子进程，注册为 running 后台任务
     /// 返回 task_id 和共享输出缓冲区；调用方负责在独立线程中继续读取 child 输出并写入 buffer，
     /// 进程结束后调用 complete_task() 完成任务
+    #[allow(clippy::too_many_arguments)]
     pub fn adopt_process(
         &self,
         command: &str,

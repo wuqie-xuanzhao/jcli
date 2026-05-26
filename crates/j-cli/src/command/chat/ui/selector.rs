@@ -108,6 +108,7 @@ fn selector_item<'a>(is_active: bool, is_selected: bool, label: &str, t: &Theme)
 }
 
 /// 通用选择器外框
+#[allow(clippy::too_many_arguments)]
 fn selector_block<'a>(
     title: &'a str,
     border_color: ratatui::style::Color,

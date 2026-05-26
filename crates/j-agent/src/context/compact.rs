@@ -42,6 +42,7 @@ pub fn new_invoked_skills_map() -> InvokedSkillsMap {
 }
 
 /// 记录一次技能调用（由 LoadSkill 工具执行后调用）
+#[allow(clippy::too_many_arguments)]
 pub fn record_skill_invocation(
     map: &InvokedSkillsMap,
     name: String,

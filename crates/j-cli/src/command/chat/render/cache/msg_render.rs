@@ -130,6 +130,7 @@ pub(crate) fn render_thinking_block(reasoning: &str, ctx: &mut RenderContext<'_>
 
 #[allow(clippy::too_many_lines)]
 /// 渲染用户消息
+#[allow(clippy::too_many_arguments)]
 pub fn render_user_msg(
     content: &str,
     is_selected: bool,

@@ -128,6 +128,7 @@ pub fn format_json_value(value: &serde_json::Value) -> String {
 }
 
 /// 获取工具特性化结果摘要
+#[allow(clippy::too_many_arguments)]
 pub fn get_result_summary_for_tool(
     content: &str,
     is_error: bool,
