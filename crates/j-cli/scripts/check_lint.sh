@@ -41,7 +41,7 @@ all_rs() { find "$SRC_DIR" -name '*.rs' -not -path '*/target/*'; }
 CARGO_AVAILABLE=true
 if ! command -v cargo &>/dev/null; then
     CARGO_AVAILABLE=false
-    warn "cargo 不在 PATH 中，跳过 fmt/clippy 检查"
+    info "cargo 不在 PATH 中，跳过 fmt/clippy 检查"
 fi
 # =============================================================================
 # 1. cargo fmt
