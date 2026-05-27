@@ -62,7 +62,6 @@ pub struct ChatApp {
     /// 后台任务管理器
     pub background_manager: Arc<BackgroundManager>,
     /// Task 管理器（由内置 hook 和工具通过 Arc 引用使用）
-    #[allow(dead_code)]
     pub task_manager: Arc<TaskManager>,
     /// Todo 管理器
     pub todo_manager: Arc<TodoManager>,
@@ -108,7 +107,6 @@ pub struct ChatApp {
     /// Agent 实际使用的上下文 token 估算值（agent 每轮更新，UI 读取显示）
     pub context_tokens: Arc<Mutex<usize>>,
     /// Teammate 管理器（多 agent 协作）
-    #[allow(dead_code)]
     pub teammate_manager: Arc<Mutex<TeammateManager>>,
     /// 子 Agent（AgentTool）运行快照追踪器（供 /dump 读取）
     pub sub_agent_tracker: Arc<SubAgentTracker>,

@@ -22,6 +22,7 @@ use crate::command::chat::tools::todo::TodoManager;
 use crate::command::chat::tools::{ToolDefinitionParams, ToolRegistry};
 use crate::error;
 use crate::theme::Theme;
+use crate::util::safe_lock;
 use colored::Colorize;
 use std::io::{self, Write};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -230,7 +231,7 @@ pub(crate) fn run_oneshot_agent(
     //   这样 agent loop 中的 push_both 会在此基础上追加 assistant/tool 消息，
     //   最终 persist_messages 能拿到完整的消息序列。
     {
-        let mut ctx = context_messages.lock().unwrap();
+        let mut ctx = safe_lock(&context_messages, "oneshot::init_ctx");
         ctx.extend(prior_messages.iter().cloned());
         ctx.push(user_msg.clone());
     }
@@ -324,7 +325,7 @@ pub(crate) fn run_oneshot_agent(
         for msg in msgs {
             match msg {
                 StreamMsg::Chunk => {
-                    let content = streaming_content.lock().unwrap();
+                    let content = safe_lock(&streaming_content, "oneshot::chunk_streaming");
                     if content.len() > last_streaming_len {
                         // 停止思考动画（首次文本到来时）
                         if anim_running {
@@ -437,7 +438,7 @@ pub(crate) fn run_oneshot_agent(
                         // no_render 模式下补一个换行
                         println!();
                     }
-                    let ctx_msgs = context_messages.lock().unwrap();
+                    let ctx_msgs = safe_lock(&context_messages, "oneshot::done_ctx");
                     let persist_from = if prior_len < ctx_msgs.len() {
                         prior_len
                     } else {
@@ -462,7 +463,7 @@ pub(crate) fn run_oneshot_agent(
                         stop_thinking_animation(&anim_stop);
                     }
                     error!("\n{}", e.display_message());
-                    let ctx_msgs = context_messages.lock().unwrap();
+                    let ctx_msgs = safe_lock(&context_messages, "oneshot::error_ctx");
                     let persist_from = if prior_len < ctx_msgs.len() {
                         prior_len
                     } else {
@@ -483,7 +484,7 @@ pub(crate) fn run_oneshot_agent(
                         stop_thinking_animation(&anim_stop);
                     }
                     println!();
-                    let ctx_msgs = context_messages.lock().unwrap();
+                    let ctx_msgs = safe_lock(&context_messages, "oneshot::cancelled_ctx");
                     let persist_from = if prior_len < ctx_msgs.len() {
                         prior_len
                     } else {

@@ -36,12 +36,26 @@ dim()   { printf "      ${C_DIM}%s${C_RST}\n" "$*"; }
 # ── 辅助: 查找全部 .rs 源文件 ─────────────────────────────────────────────────
 all_rs() { find "$SRC_DIR" -name '*.rs' -not -path '*/target/*'; }
 
-
 # ── 检查 cargo 可用性 ──────────────────────────────────────────────────────────
+# resolve_bin: 跨平台查找可执行文件（支持 WSL/Git Bash/MSYS2）
+resolve_bin() {
+    local name="$1"
+    local path=""
+    path="$(command -v "$name" 2>/dev/null || true)"
+    if [[ -z "$path" && "$name" != *.exe ]]; then
+        path="$(command -v "${name}.exe" 2>/dev/null || true)"
+    fi
+    # PowerShell 备用：查找 Windows PATH
+    if [[ -z "$path" ]] && command -v powershell.exe >/dev/null 2>&1; then
+        path="$(powershell.exe -NoProfile -Command "(Get-Command ${name}.exe -ErrorAction SilentlyContinue).Path" 2>/dev/null | tr -d '\r' | tail -n 1)"
+    fi
+    printf '%s' "$path"
+}
+CARGO_BIN="$(resolve_bin cargo)"
 CARGO_AVAILABLE=true
-if ! command -v cargo &>/dev/null; then
+if [[ -z "$CARGO_BIN" ]]; then
     CARGO_AVAILABLE=false
-    info "cargo 不在 PATH 中，跳过 fmt/clippy 检查"
+    info "cargo 不可用，跳过 fmt/clippy 检查"
 fi
 # =============================================================================
 # 1. cargo fmt
@@ -50,27 +64,27 @@ hdr "=== 1. 代码格式 (cargo fmt) ==="
 if ! $CARGO_AVAILABLE; then
     info "跳过 (cargo 不可用)"
 elif $DO_FIX; then
-    cargo fmt
+    "$CARGO_BIN" fmt
     pass "cargo fmt -- 已自动格式化"
 else
-    if cargo fmt -- --check 2>/dev/null; then
+    if "$CARGO_BIN" fmt -- --check 2>/dev/null; then
         pass "cargo fmt 检查通过"
     else
-        fail "cargo fmt 未通过，运行 'cargo fmt' 或 'bash tools/check_lint.sh --fix'"
+        fail "cargo fmt 未通过，运行 'cargo fmt' 或 'bash scripts/check_lint.sh --fix'"
     fi
 fi
-
 # =============================================================================
 # 2. cargo clippy
 # =============================================================================
 hdr "=== 2. Clippy 静态分析 (-D warnings) ==="
 if ! $CARGO_AVAILABLE; then
     info "跳过 (cargo 不可用)"
-elif cargo clippy -- -D warnings 2>&1; then
+elif "$CARGO_BIN" clippy -- -D warnings 2>&1; then
     pass "clippy 零告警"
 else
     fail "clippy 存在告警，详见上方输出"
 fi
+# =============================================================================
 
 # =============================================================================
 # 3. 单文件行数
@@ -203,6 +217,8 @@ fi
 hdr "=== 6. unwrap/expect 使用 (非 test 代码应避免) ==="
 unwrap_warn=0
 while IFS= read -r f; do
+    # 跳过 tests 目录下的文件
+    if [[ "$f" == */tests/* ]]; then continue; fi
     rel="${f#$PROJECT_ROOT/}"
     # 查找包含 .unwrap() 或 .expect( 的行，排除 test 文件
     hits=$(awk '
